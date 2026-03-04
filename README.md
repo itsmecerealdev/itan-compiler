@@ -111,7 +111,7 @@
 
 ## Running an example test.it file.
 
-### Example test file for syntax examples.
+### Example test file syntax
 
 - ALL FILES MUST HAVE .it EXTENSIONS.
   - Comments are not currently supported, so I'll put it here- the third line DOES evaluate, but it doesn't assign anywhere so it's orphaned basically.
@@ -125,7 +125,7 @@ int64(x);
 print(x);
 ```
 
-### Example test file for syntax
+### Example test file execution and output
 
 - **Note:** All files must have `.it` extensions. Comments are not currently supported.  
 - To "compile" the file, compile *.cc in the directory to generate the interpreter a.out file
