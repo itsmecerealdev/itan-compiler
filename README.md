@@ -120,3 +120,45 @@ x = x + 5;<br>
 x * x + 2 ^ 3;<br>
 int64(x);<br>
 print(x);<br>
+
+## Example test file for syntax
+
+- **Note:** All files must have `.it` extensions. Comments are not currently supported.  
+- To "compile" the file, compile *.cc in the directory to generate the interpreter a.out file
+  -  then, type "./a FILENAME"
+    - Don't include the extension, as it is added by the compiler. JUST the filename. 
+- The third line evaluates but does not assign anywhere — it's “orphaned.” Wrap it in `print()` to see its result.
+
+```it
+int32 x = int32(5);
+x = x + 5;
+x * x + 2 ^ 3;
+int64(x);
+print(x);
+```
+
+### Output of the example
+
+Not-so-pretty printer
+```plaintext
+Program<br>
+    Declaration x =<br>
+      int32 : params -> Number(5)<br>
+    Assignment x =<br>
+        Operand 1<br>
+            Variable x<br>
+            Number(5)<br>
+    Operand 1<br>
+        Operand 3<br>
+            Variable x<br>
+            Variable x<br>
+        Operand 5<br>
+            Number(2)<br>
+            Number(3)<br>
+    int64 : params -> Variable x<br>
+    print: Variable x<br>
+```
+
+-Evaluation print()<br>
+10
+    
