@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 using ContextMap = std::unordered_map<string, DeclarationNode*>;
 
@@ -16,6 +17,8 @@ class Visitor {
 		virtual void visit(AssignmentNode& node);
 		virtual void visit(DeclarationNode& node);
 		virtual void visit(VariableNode& node);
+		virtual void visit(COCNode& node);
+		virtual void visit(PrintNode& node);
 
 		virtual ~Visitor() = default;
 };
@@ -31,7 +34,8 @@ class PrintVisitor : public Visitor {
 		void visit(AssignmentNode& node) override;
 		void visit(DeclarationNode& node) override;
 		void visit(VariableNode& node) override;
-
+		void visit(COCNode& node) override;
+		void visit(PrintNode& node) override;
 };
 
 class DeclarationVisitor : public Visitor {
@@ -49,13 +53,19 @@ class DeclarationVisitor : public Visitor {
 
 class SemanticsVisitor : public Visitor {
 	private:
-		ContextMap &Context;
+		const ContextMap &Context;
+		unordered_map<string, ValueType> typeKeywords;
 		std::string currentInit;
+		void populateKeywords() {
+			typeKeywords["int32"] = ValueType::int32;
+			typeKeywords["int64"] = ValueType::int64;
+		}
 	public:
 		void visit(VariableNode& node) override;
 		void visit(AssignmentNode& node) override; 
 		void visit(DeclarationNode& node) override; 
-		SemanticsVisitor(ContextMap &context) : Context(context) {}
+		void visit(COCNode& node) override;
+		SemanticsVisitor(ContextMap &context) : Context(context) { populateKeywords(); }
 };
 
 class EvaluatorVisitor : public Visitor {
@@ -69,4 +79,21 @@ class EvaluatorVisitor : public Visitor {
 		void visit(AssignmentNode& node) override;
 		void visit(DeclarationNode& node) override;
 		void visit(VariableNode& node) override;
+		void visit(COCNode& node) override;
+		void visit(PrintNode& node) override;
+};
+
+class TypeVisitor : public Visitor {
+	private:
+		const ContextMap &Context;
+		vector<ValueType> stack;
+	public:
+		void visit(COCNode& node) override;
+		void visit(ProgramNode& node) override;
+		void visit(NumberNode& node) override;
+		void visit(OperandNode& node) override;
+		void visit(AssignmentNode& node) override;
+		void visit(DeclarationNode& node) override;
+		void visit(VariableNode& node) override;
+		TypeVisitor(ContextMap &context) : Context(context) {}
 };

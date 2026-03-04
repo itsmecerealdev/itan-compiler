@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+#include <functional>
 #include <iostream>
 #include <cstdlib>
 #include <stdexcept>
@@ -7,6 +9,12 @@
 #include "lexer.h"
 
 using namespace std;
+
+enum class COCResolution : uint8_t {
+	Unresolved,
+	Call,
+	Cast
+};
 
 class Visitor;
 
@@ -52,12 +60,12 @@ class VariableNode : public Node {
 
 class DeclarationNode : public Node {
 	public:
-		VariableType varType;
+		ValueType varType;
 		string name;
 		Node* expression;
 
 		void accept(Visitor &v) override;
-		DeclarationNode(VariableType intype, string inname, Node* inexpression) : varType(intype), name(inname), expression(inexpression) {
+		DeclarationNode(ValueType intype, string inname, Node* inexpression) : varType(intype), name(inname), expression(inexpression) {
 			if(expression == nullptr) throw runtime_error("No expression provided in " + name + "variable."); 
 		}
 		~DeclarationNode() override { delete expression; }
@@ -75,20 +83,26 @@ class AssignmentNode : public Node {
 		~AssignmentNode() override { delete expression; }
 };
 
-		// int eval() override {
-		// 	int left = lhs->eval();
-		// 	int right = rhs->eval();
-		// 	switch(type) {
-		// 		case TokenType::Plus:
-		// 			return left + right;
-		// 		case TokenType::Minus:
-		// 			return left - right;
-		// 		case TokenType::Star: 
-		// 			return left * right;
-		// 		case TokenType::Slash:
-		// 			if(right == 0) throw runtime_error("Division by zero.");
-		// 			return left / right;
-		//
-		// 	}
-		// 	throw logic_error("Invalid operand\n");
-		// }
+class COCNode : public Node {
+	public:
+		string name;
+		COCResolution resolution = COCResolution::Unresolved;
+		vector<Node*> expressions;
+		ValueType type;
+
+		void accept(Visitor &v) override;
+		//Checking for a lack of expression here is premature. Function calls can exist with no parameter.
+		COCNode(const string &str, vector<Node*> &inexpressions) : name(str), expressions(inexpressions) {}
+		~COCNode() override { for (auto e : expressions) delete e; }
+};
+
+class PrintNode : public Node {
+	public:
+	Node* expression;
+
+	void accept(Visitor &v) override;
+	PrintNode(Node* inexpression) : expression(inexpression) { 
+		if(expression == nullptr) throw runtime_error ("Print() requires exactly one expression."); 
+	}
+	~PrintNode() override { delete expression; }
+};

@@ -17,31 +17,40 @@ enum class TokenType : unsigned char {
 	Exponent,
 	LParen,
 	RParen,
+	Comma,
 	Assignment,
 	Type,
 	StatementEnd,
 	Identifier,
+	FuncIdentifier,
 	End
 };
 
-enum class  VariableType : unsigned char{
+enum class  ValueType : unsigned char{
+	none,
 	LITERAL,
 	int32,
 	int64
+};
+enum class BuiltInFuncNames : unsigned char {
+	none,
+	print
 };
 
 class Token {
 	public:
 		TokenType tokentype{};
-		VariableType vartype{};
+		ValueType vartype{};
 		string name;
 		int64_t value{};
+		BuiltInFuncNames func = BuiltInFuncNames::none;
 };
 
 class Lexer {
 	private:
 		string buffer;
-		unordered_map<string, VariableType> typeKeywords;
+		unordered_map<string, ValueType> typeKeywords;
+		unordered_map<string, BuiltInFuncNames> funcKeywords; 
 		void eatWhiteSpace();
 
 		void generateKeywordMap();

@@ -7,3 +7,5 @@ void AssignmentNode::accept(Visitor &v) { v.visit(*this); }
 void DeclarationNode::accept(Visitor &v) { v.visit(*this); }
 void OperandNode::accept(Visitor &v) { v.visit(*this); }
 void VariableNode::accept(Visitor &v) { v.visit(*this); }
+void COCNode::accept(Visitor &v) { v.visit(*this); }
+void PrintNode::accept(Visitor &v) { v.visit(*this); }

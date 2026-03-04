@@ -5,9 +5,33 @@
 #include <stdexcept>
 #include <string>
 
+Node* Parser::parseCastOrCall() {
+	Token identifier = consume(); //Cannot do expect, as this can be either identifier or type. The next line will catch an error.
+	expect(TokenType::LParen);
+	vector<Node*> expressions;
+	if(peek() != TokenType::RParen) expressions.push_back(parseExpression());
+	while(peek() == TokenType::Comma) {
+		consume();
+		expressions.push_back(parseExpression());
+	}
+	expect(TokenType::RParen);
+	return new COCNode(identifier.name, expressions);
+}
+
+Node* Parser::parseAssignment() {
+	Token t = expect(TokenType::Identifier);
+	string n = t.name;
+	expect(TokenType::Assignment);
+	Node* expression = parseExpression();
+	expect(TokenType::StatementEnd);
+	return new AssignmentNode(n, expression);
+}
 
 Node* Parser::parseFactor() {
-	if(peek() == TokenType::Identifier) {
+	if((peek() == TokenType::Type || peek() == TokenType::Identifier) && peekAhead() == TokenType::LParen) {
+		return parseCastOrCall();
+	}
+	else if(peek() == TokenType::Identifier) {
 		Token t = consume();
 		return new VariableNode(t.name);
 	}
@@ -65,23 +89,17 @@ Node* Parser::parseExpression(){
 }
 
 Node* Parser::parseExprStatement() {
+	if(peek() == TokenType::Identifier && peekAhead() == TokenType::Assignment) {
+		return parseAssignment();
+	}
 	Node* n = parseExpression();
 	expect(TokenType::StatementEnd);
 	return n;
 }
 
-Node* Parser::parseAssignment() {
-	Token t = expect(TokenType::Identifier);
-	string n = t.name;
-	expect(TokenType::Assignment);
-	Node* expression = parseExpression();
-	expect(TokenType::StatementEnd);
-	return new AssignmentNode(n, expression);
-}
-
 Node* Parser::parseDeclaration() {
 	Token t = expect(TokenType::Type);
-	VariableType vt = t.vartype;
+	ValueType vt = t.vartype;
 	t = expect(TokenType::Identifier);
 	string n = t.name;
 	t = expect(TokenType::Assignment);
@@ -90,15 +108,24 @@ Node* Parser::parseDeclaration() {
 	return new DeclarationNode(vt, n, expression);
 }
 
+Node* Parser::parseFunction() {
+	Token t = expect(TokenType::FuncIdentifier);
+	expect(TokenType::LParen);
+	Node* exp = parseExpression();
+	expect(TokenType::RParen);
+	expect(TokenType::StatementEnd);
+	return new PrintNode(exp);
+}
+
 Node* Parser::parseStatement() {
 	TokenType t = peek();
-	if(t == TokenType::Type) {
+	if(t == TokenType::Type && peekAhead() != TokenType::LParen) {
 		return parseDeclaration();
 	}
-	else if(t == TokenType::Identifier && peekAhead() == TokenType::Assignment) {
-		return parseAssignment();
+	else if(t == TokenType::FuncIdentifier) {
+		return parseFunction();
 	}
-	else if (t != TokenType::End) {
+	else if(t != TokenType::End) {
 		return parseExprStatement();
 	}
 	return nullptr;

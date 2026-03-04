@@ -16,8 +16,10 @@ class Parser {
 		Node* parseExpression();
 		Node* parseExprStatement(); //Seperates statement structure from expression structure
 			
+		Node* parseCastOrCall();
 		Node* parseAssignment();
 		Node* parseDeclaration();
+		Node* parseFunction();
 
 		Node* parseStatement();
 

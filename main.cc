@@ -4,6 +4,8 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <thread>
+#include <unistd.h>
 #include <vector>
 #include "/public/read.h" // IWYU pragma: keep
 #include "node.h"
@@ -43,6 +45,7 @@ int main(int argc, char** argv) {
 	// for(const auto &c : tokens) {
 		// cout << int(c.tokentype) << " ";
 	// }
+	// usleep(2);
 	Parser p{0, tokens};	
 	Node* AST = p.parseProgram();
 
@@ -50,10 +53,12 @@ int main(int argc, char** argv) {
 	PrintVisitor pv;
 	DeclarationVisitor dv(Context);
 	SemanticsVisitor sv(Context);
+	TypeVisitor tv(Context);
 	EvaluatorVisitor ev;
 	AST->accept(pv);
 	AST->accept(dv);
 	AST->accept(sv);
+	AST->accept(tv);
 	AST->accept(ev);
 	delete(AST);
 }
