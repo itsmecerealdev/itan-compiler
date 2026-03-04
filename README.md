@@ -146,21 +146,21 @@ print(x);
 Not-so-pretty printer
 ```plaintext
 Program<br>
-    Declaration x =<br>
-      int32 : params -> Number(5)<br>
-    Assignment x =<br>
-        Operand 1<br>
-            Variable x<br>
-            Number(5)<br>
-    Operand 1<br>
-        Operand 3<br>
-            Variable x<br>
-            Variable x<br>
-        Operand 5<br>
-            Number(2)<br>
-            Number(3)<br>
-    int64 : params -> Variable x<br>
-    print: Variable x<br>
+    Declaration x =
+      int32 : params -> Number(5)
+    Assignment x =
+        Operand 1
+            Variable x
+            Number(5)
+    Operand 1
+        Operand 3
+            Variable x
+            Variable x
+        Operand 5
+            Number(2)
+            Number(3)
+    int64 : params -> Variable x
+    print: Variable x
 ```
 
 -Evaluation print()<br>
