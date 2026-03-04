@@ -115,8 +115,8 @@
   - Comments are not currently supported, so I'll put it here- the third line DOES evaluate, but it doesn't assign anywhere so it's orphaned basically.
     - if you put print( ) around it, you can see it does evaluate.
 
-int32 x = int32(5);
-x = x + 5;
-x * x + 2 ^ 3;
-int64(x);
-print(x);
+int32 x = int32(5);<br>
+x = x + 5;<br>
+x * x + 2 ^ 3;<br>
+int64(x);<br>
+print(x);<br>
