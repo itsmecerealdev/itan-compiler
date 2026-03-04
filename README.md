@@ -108,3 +108,15 @@
   - I plan on adding a special functionality for parameter defaults
      - Foo( , x); will be valid, and the comma with no expression before will implicitly use the default val in the parameter. 
 - overflow protection
+
+## Example test file for syntax examples.
+
+- ALL FILES MUST HAVE .it EXTENSIONS.
+  - Comments are not currently supported, so I'll put it here- the third line DOES evaluate, but it doesn't assign anywhere so it's orphaned basically.
+    - if you put print( ) around it, you can see it does evaluate.
+
+int32 x = int32(5);
+x = x + 5;
+x * x + 2 ^ 3;
+int64(x);
+print(x);
