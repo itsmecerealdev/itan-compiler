@@ -109,19 +109,23 @@
      - Foo( , x); will be valid, and the comma with no expression before will implicitly use the default val in the parameter. 
 - overflow protection
 
-## Example test file for syntax examples.
+## Running an example test.it file.
+
+### Example test file for syntax examples.
 
 - ALL FILES MUST HAVE .it EXTENSIONS.
   - Comments are not currently supported, so I'll put it here- the third line DOES evaluate, but it doesn't assign anywhere so it's orphaned basically.
     - if you put print( ) around it, you can see it does evaluate.
 
-int32 x = int32(5);<br>
-x = x + 5;<br>
-x * x + 2 ^ 3;<br>
-int64(x);<br>
-print(x);<br>
+```it
+int32 x = int32(5);
+x = x + 5;
+x * x + 2 ^ 3;
+int64(x);
+print(x);
+```
 
-## Example test file for syntax
+### Example test file for syntax
 
 - **Note:** All files must have `.it` extensions. Comments are not currently supported.  
 - To "compile" the file, compile *.cc in the directory to generate the interpreter a.out file
