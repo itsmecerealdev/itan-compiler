@@ -8,7 +8,7 @@
 - It literally only exists for me to learn.
 - It doesn't even handle errors in a user friendly way. It throws at the first error and calls it good.
   - The errors are also not very descriptive currently.
-    - For example during parsing, instead of printing Unexpected token ( does not match expected qualifier ;
+    - For example during parsing, instead of printing Unexpected token ( does not match expected qualifier ; it prints out the integer representation of the TokenType enum for each token.
       - This is because the tokentype enum is still not cemented, so it prints the integer index representation of the type in the enum.
       - A much nicer error message system is planned soon. It will not have advanced recovery systems, it will gather errors from the current phase of the first error, collect all following errors in that phase, then throw.
         - It will not advance to the following phases. And the parser I will try to implement functionality to protect from cascading errors, but no promises.
