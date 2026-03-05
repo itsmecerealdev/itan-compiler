@@ -40,7 +40,7 @@
 - On the other hand, an expression are the "functionalities" in the statement.
   - This can be: (subject to change)
     - an integer literal : 5;
-    - an identifier : x; (returns the value curreently stored in x)
+    - an identifier : x; (returns the value currently stored in x)
     - an operand that will return the evaluation of its left and right.
     - cast or call nodes as they return values. (even void functions when functions are added, the calls will be expressions. Declarations will be statements.)
 
@@ -53,7 +53,7 @@
 - The assignment and declaration (expression)s can be full expressions, they are not limited to other variable identifiers or integer literals. They just cannot self-assign during declaration.
 
 - This "language" is use if declared, not before or after.
-  - As long as it is declared in scope (not implemented yet, but soon) it may be used.
+  - As long as it is declared in scope it may be used.
   - This means that : x = 5; int32 x = 7; x; is valid and will evaluate to 7.
   - AND : x = 5; x; int32 x = 7; is ALSO valid and will evaluate to 5.
   - This is intentional, even though seemingly odd.
