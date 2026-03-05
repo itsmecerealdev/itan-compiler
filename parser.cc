@@ -41,7 +41,10 @@ Node* Parser::parseFactor() {
 		expect(TokenType::RParen);
 		return temp;
 	}
-	return new NumberNode(expect(TokenType::Number).value);
+	else if(peek() == TokenType::Number) {
+		return new NumberNode(expect(TokenType::Number).value);
+	}
+	else return nullptr;
 }
 
 Node* Parser::parseExponent() {
@@ -125,18 +128,40 @@ Node* Parser::parseStatement() {
 	else if(t == TokenType::FuncIdentifier) {
 		return parseFunction();
 	}
+	// else if(peek() == TokenType::RBrace) {
+		// return nullptr;
+	// }
 	else if(t != TokenType::End) {
 		return parseExprStatement();
 	}
 	return nullptr;
 }
 
-Node* Parser::parseProgram() {
+Node* Parser::parseScope() {
 	vector<Node*> statements;
-	while(peek() != TokenType::End) {
-		 statements.push_back(parseStatement());
+	expect(TokenType::LBrace);
+	// parseStatement();
+	while(peek() != TokenType::RBrace) {
+		if(peek() == TokenType::LBrace) statements.push_back(parseScope());
+		else statements.push_back(parseStatement());	
 	}
-	return new ProgramNode(statements);
+	expect(TokenType::RBrace);
+	return new ScopeNode(statements);
+}
+
+Node* Parser::parseProgram() {
+	vector<Node*> scopes;
+	while(peek() != TokenType::End) {
+		if(peek() == TokenType::LBrace) {
+			scopes.push_back(parseScope());
+		} 
+		else {
+			scopes.push_back(parseStatement());
+		}
+	}
+	std::erase_if(scopes, [](Node* n) { return n == nullptr; }); 
+	ScopeNode* global = new ScopeNode(scopes);
+	return new ProgramNode(global);
 }
 
 TokenType Parser::peekAhead() {
@@ -158,6 +183,6 @@ Token Parser::consume() {
 
 Token Parser::expect(TokenType t) {
 	TokenType temp = peek();
-	if(temp != t) throw logic_error("Token " + to_string(int(temp)) + " does not match expected qualifier: " + to_string(int(t)));
+	if(temp != t) throw logic_error("Token " + to_string(int(temp)) + " at index " + to_string(index) + " does not match expected qualifier: " + to_string(int(t)));
 	return consume();
 }

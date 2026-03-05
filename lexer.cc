@@ -55,6 +55,12 @@ vector<Token> Lexer::tokenizeBuffer() {
 				case '^':
 					result.push_back(Token{TokenType::Exponent, ValueType::none, "", 0});
 					break;
+				case '{':
+					result.push_back(Token{TokenType::LBrace, ValueType::none, "", 0});
+					break;
+				case '}':
+					result.push_back(Token{TokenType::RBrace, ValueType::none, "", 0});
+					break;
 			}
 			bufferIndex++;
 			continue;

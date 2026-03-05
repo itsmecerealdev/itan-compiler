@@ -22,6 +22,7 @@ class Parser {
 		Node* parseFunction();
 
 		Node* parseStatement();
+		Node* parseScope();
 
 		Token consume();
 		TokenType peek();

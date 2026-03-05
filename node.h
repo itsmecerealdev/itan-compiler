@@ -8,7 +8,10 @@
 #include <string>
 #include "lexer.h"
 
+class DeclarationNode;
+
 using namespace std;
+using ContextMap = std::unordered_map<string, DeclarationNode*>;
 
 enum class COCResolution : uint8_t {
 	Unresolved,
@@ -18,18 +21,33 @@ enum class COCResolution : uint8_t {
 
 class Visitor;
 
+class Scope {
+	public:
+		Scope* parent;
+		ContextMap context;	
+};
+
 class Node {
 	public:
 		virtual void accept(Visitor &v) = 0;	
 		virtual ~Node() = default;
 };
 
-class ProgramNode : public Node {
+class ScopeNode: public Node {
 	public:
 		vector<Node*> statements;
+		Scope* scope;
 		void accept(Visitor &v) override;
-		ProgramNode(vector<Node*> &nodes) : statements(nodes) {}
-		~ProgramNode() override { for (auto &c : statements) delete c; }
+		ScopeNode(vector<Node*> &nodes) : statements(nodes), scope(new Scope()) {}
+		~ScopeNode() override { for (auto &c : statements) delete c; delete scope; }
+};
+
+class ProgramNode : public Node {
+	public:
+		ScopeNode* global;
+		void accept(Visitor &v) override;
+		ProgramNode(ScopeNode* scope) : global(scope) {}
+		~ProgramNode() override { delete global; }
 };
 
 class NumberNode : public Node {

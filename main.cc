@@ -31,7 +31,6 @@ string fileTarget(const string &filename) {
 int main(int argc, char** argv) {
 	vector<Token> tokens;
 	string buffer;
-	ContextMap Context;
 
 	if(argc > 1) {
 		buffer = fileTarget(string(argv[1]));
@@ -42,23 +41,24 @@ int main(int argc, char** argv) {
 	Lexer l{buffer};
 	tokens = l.tokenizeBuffer();
 
-	// for(const auto &c : tokens) {
-		// cout << int(c.tokentype) << " ";
-	// }
+	for(const auto &c : tokens) {
+		cout << int(c.tokentype) << " ";
+	}
+	std::cout << std::endl;
 	// usleep(2);
 	Parser p{0, tokens};	
 	Node* AST = p.parseProgram();
 
 
 	PrintVisitor pv;
-	DeclarationVisitor dv(Context);
-	SemanticsVisitor sv(Context);
-	TypeVisitor tv(Context);
+	DeclarationVisitor dv;
+	SemanticsVisitor sv;
+	TypeVisitor tv;
 	EvaluatorVisitor ev;
 	AST->accept(pv);
 	AST->accept(dv);
 	AST->accept(sv);
 	AST->accept(tv);
-	AST->accept(ev);
+	// AST->accept(ev);
 	delete(AST);
 }

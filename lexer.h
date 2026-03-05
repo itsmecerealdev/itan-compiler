@@ -23,6 +23,8 @@ enum class TokenType : unsigned char {
 	StatementEnd,
 	Identifier,
 	FuncIdentifier,
+	RBrace,
+	LBrace,
 	End
 };
 

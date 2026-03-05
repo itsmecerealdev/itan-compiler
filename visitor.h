@@ -7,11 +7,12 @@
 #include <unordered_map>
 #include <unordered_set>
 
-using ContextMap = std::unordered_map<string, DeclarationNode*>;
+using Context = std::vector<std::unordered_map<string, DeclarationNode*>>;
 
 class Visitor {
 	public:
 		virtual void visit(ProgramNode &node);
+		virtual void visit(ScopeNode &node);
 		virtual void visit(NumberNode& node);
 		virtual void visit(OperandNode& node);
 		virtual void visit(AssignmentNode& node);
@@ -29,6 +30,7 @@ class PrintVisitor : public Visitor {
 		void tabHelper();
 	public:
 		void visit(ProgramNode &node) override;
+		void visit(ScopeNode &node) override;
 		void visit(NumberNode& node) override;
 		void visit(OperandNode& node) override;
 		void visit(AssignmentNode& node) override;
@@ -40,20 +42,16 @@ class PrintVisitor : public Visitor {
 
 class DeclarationVisitor : public Visitor {
 	private:
-		//Stores the context of variables. Declarations and assignments.
-		//This is used to do a semantic pass through the file and ensure variables are declared.
-		//This only stores declarations, and is referenced during the pass whenever a variable node occurs.
-		ContextMap &Context; 
+		vector<Scope*> scopes;
 	public:
-		//Declaration visitor ONLY cares about Declaration nodes. It doesn't need to traverse them, it just stores a ptr to it in
-		//the ContextMap.
+		void visit(ScopeNode& node) override;
 		void visit(DeclarationNode& node) override;
-		DeclarationVisitor(ContextMap &context) : Context(context) {}
+		DeclarationVisitor() {}
 };
 
 class SemanticsVisitor : public Visitor {
 	private:
-		const ContextMap &Context;
+		Scope* currscope;
 		unordered_map<string, ValueType> typeKeywords;
 		std::string currentInit;
 		void populateKeywords() {
@@ -61,11 +59,12 @@ class SemanticsVisitor : public Visitor {
 			typeKeywords["int64"] = ValueType::int64;
 		}
 	public:
+		void visit(ScopeNode& node) override;
 		void visit(VariableNode& node) override;
 		void visit(AssignmentNode& node) override; 
 		void visit(DeclarationNode& node) override; 
 		void visit(COCNode& node) override;
-		SemanticsVisitor(ContextMap &context) : Context(context) { populateKeywords(); }
+		SemanticsVisitor() { populateKeywords(); }
 };
 
 class EvaluatorVisitor : public Visitor {
@@ -85,9 +84,10 @@ class EvaluatorVisitor : public Visitor {
 
 class TypeVisitor : public Visitor {
 	private:
-		const ContextMap &Context;
+		Scope* currscope;
 		vector<ValueType> stack;
 	public:
+		void visit(ScopeNode &node) override;
 		void visit(COCNode& node) override;
 		void visit(ProgramNode& node) override;
 		void visit(NumberNode& node) override;
@@ -95,5 +95,5 @@ class TypeVisitor : public Visitor {
 		void visit(AssignmentNode& node) override;
 		void visit(DeclarationNode& node) override;
 		void visit(VariableNode& node) override;
-		TypeVisitor(ContextMap &context) : Context(context) {}
+		TypeVisitor() {}
 };

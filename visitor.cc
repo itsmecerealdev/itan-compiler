@@ -27,6 +27,10 @@ void Visitor::visit(VariableNode& node) { }
 //If concrete visitors do not need information from these node types, then it simply traverses the children.
 //These are overridden if the concrete visitor requires some functionality other than walking the tree
 void Visitor::visit(ProgramNode &node) {
+	if(node.global) node.global->accept(*this);
+}
+
+void Visitor::visit(ScopeNode &node) {
 	if(node.statements.size() <= 0) return;
 	for(const auto &n : node.statements) {
 		n->accept(*this);
@@ -68,9 +72,19 @@ void PrintVisitor::visit(ProgramNode &node) {
 	tabHelper();
 	std::cout << "Program" << std::endl;
 	depth++;
-	for(const auto &c : node.statements) {
-		c->accept(*this);
+	if(node.global) node.global->accept(*this);
+}
+
+void PrintVisitor::visit(ScopeNode &node) {
+	tabHelper();
+	std::cout << "{" << std::endl;
+	depth++;
+	if(node.statements.size()) {
+		Visitor::visit(node);
 	}
+	depth--;
+	tabHelper();
+	std::cout << "}" << std::endl;
 }
 
 void PrintVisitor::visit(NumberNode& node) {
@@ -123,17 +137,51 @@ void PrintVisitor::visit(PrintNode& node) {
 }
 
 //DeclarationVisitor overrides
+
+void DeclarationVisitor::visit(ScopeNode& node) {
+	if(!scopes.empty()) {
+		node.scope->parent = scopes.back();
+	}
+	scopes.push_back(node.scope);
+	Visitor::visit(node);
+	scopes.pop_back();
+}
+
 void DeclarationVisitor::visit(DeclarationNode& node) {
-	if(Context.contains(node.name)) {
+	if(scopes.back()->context.size() && scopes.back()->context.contains(node.name)) {
 		throw runtime_error("Double declaration of: " + node.name + "\n");
 	}
 	
-	Context[node.name] = &node;
+	scopes.back()->context[node.name] = &node;
+}
+
+bool stackContains(const string &name, Scope* scope) {
+	Scope* p = scope;
+	while(p) {
+		if(p->context.contains(name)) return true;
+		p = p->parent;
+	}
+	return false;
+}
+
+DeclarationNode* getDeclaration(const string &name, Scope* scope) {
+	Scope* p = scope;
+	while(p) {
+		if(p->context.contains(name)) return p->context[name];
+		p = p->parent;
+	}
+	return nullptr;
 }
 
 //SemanticVisitor overrides
+void SemanticsVisitor::visit(ScopeNode &node) {
+	currscope = node.scope;
+	Visitor::visit(node);
+	currscope = currscope->parent;
+}
+
 void SemanticsVisitor::visit(VariableNode& node) {
-	if(!Context.contains(node.name)) {
+	if(!stackContains(node.name, currscope)) {
 		throw runtime_error("Use of undeclared variable: " + node.name + "\n");
 	}
 	if(currentInit != "" && node.name == currentInit) {
@@ -142,7 +190,7 @@ void SemanticsVisitor::visit(VariableNode& node) {
 }
 
 void SemanticsVisitor::visit(AssignmentNode& node) {
-	if(!Context.contains(node.name)) {
+	if(!stackContains(node.name, currscope)) {
 		throw runtime_error("Use of undeclared variable: " + node.name + "\n");
 	}
 	node.expression->accept(*this);
@@ -258,6 +306,12 @@ void EvaluatorVisitor::visit(PrintNode& node) {
 
 //TypeVisitor
 
+void TypeVisitor::visit(ScopeNode &node) {
+	currscope = node.scope;
+	Visitor::visit(node);
+	currscope = currscope->parent;
+}
+
 void TypeVisitor::visit(COCNode& node) {
 	Visitor::visit(node);
 	for(int i = 0; i < node.expressions.size(); i++) stack.pop_back();
@@ -274,14 +328,17 @@ void TypeVisitor::visit(NumberNode& node) {
 }
 
 void TypeVisitor::visit(VariableNode& node) {
-	stack.push_back(Context.at(node.name)->varType);	
+	DeclarationNode* dec = getDeclaration(node.name, currscope);
+	if(dec) {
+		stack.push_back(dec->varType);	
+	}
 }
 
 void TypeVisitor::visit(AssignmentNode& node) {
 	node.expression->accept(*this);
 	ValueType vt = stack.back();
 	stack.pop_back();
-	uint32_t left = typeRank(Context.at(node.name)->varType); 
+	uint32_t left = typeRank(getDeclaration(node.name, currscope)->varType); 
 	uint32_t right = typeRank(vt);
 	if(left < right) {
 		throw runtime_error("Implicit narrowing requires explicit cast.");	
@@ -292,7 +349,7 @@ void TypeVisitor::visit(DeclarationNode& node) {
 	node.expression->accept(*this);
 	ValueType vt = stack.back();
 	stack.pop_back();
-	uint32_t left = typeRank(Context.at(node.name)->varType); 
+	uint32_t left = typeRank(getDeclaration(node.name, currscope)->varType); 
 	uint32_t right = typeRank(vt);
 	if(right < left) {
 		throw runtime_error("Implicit narrowing requires explicit cast.");	
