@@ -28,6 +28,8 @@
   - ;
   - =
   - ,
+  - {
+  - }
 
 ### Statement vs. Expression
 - In this language, a statement is a block of anything terminated by a ;
@@ -60,7 +62,7 @@
 ## Architecture
 - Currently, this language is interpreted.
   - It is using a double dispatch based visitor system to walk the AST during runtime.
-  - Currently there are 4 visitors
+  - Currently there are 5 visitors
     - PrintVisitor (unPretty Printing)
     - DeclarationVisitor
       - This is the first of the (currently) two pass semantics validation structure
@@ -104,10 +106,11 @@
     - When types other than ints are added, I will also add relevant type conversion restrictions. 
 
 ## Planned 
-- Functions/scopes using {}
+- Functions
   - I plan on adding a special functionality for parameter defaults
      - Foo( , x); will be valid, and the comma with no expression before will implicitly use the default val in the parameter. 
 - overflow protection
+- FINISHING SCOPES. EVALUATORVISITOR DOES **NOT** CURRENTLY WORK WITH SCOPES. DO NOT TEST THEM WITH THE EV ENABLED.
 
 ## Running an example test.it file.
 
