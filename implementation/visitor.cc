@@ -227,10 +227,6 @@ Value makeUInt64(uint64_t val) {
 	return v;
 }
 
-Value EvaluatorVisitor::getRuntimeValUI64(const std::string &name) {
-	return makeUInt64(runtime.back()[name].getUInt<uint64_t>());
-}
-
 Value& EvaluatorVisitor::getRuntimeVal(const std::string &name) {
 	for(auto iter = runtime.rbegin(); iter != runtime.rend(); iter++) {
 		auto found = iter->find(name);
