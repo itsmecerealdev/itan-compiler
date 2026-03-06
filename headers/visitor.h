@@ -8,6 +8,7 @@
 #include <unordered_set>
 
 using Context = std::vector<std::unordered_map<string, DeclarationNode*>>;
+using Runtime = std::vector<std::unordered_map<string, Value>>;
 
 class Visitor {
 	public:
@@ -69,10 +70,13 @@ class SemanticsVisitor : public Visitor {
 
 class EvaluatorVisitor : public Visitor {
 	private:
-		unordered_map<string, uint64_t> runtime;
-		vector<int64_t> stack;
+		Runtime runtime;
+		vector<Value> stack;
+		Value getRuntimeValUI64(const std::string &name); 
+		Value &getRuntimeVal(const std::string &name); 
 	public:
 		void visit(ProgramNode& node) override;
+		void visit(ScopeNode& node) override;
 		void visit(NumberNode& node) override;
 		void visit(OperandNode& node) override;
 		void visit(AssignmentNode& node) override;

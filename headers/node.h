@@ -27,6 +27,47 @@ class Scope {
 		ContextMap context;	
 };
 
+class Value {
+	private:
+		ValueType type = ValueType::int64;
+		union {
+			uint64_t uint64;
+		} data;
+		std::string str;
+	public:
+		ValueType getType() const { return type; }
+		void setType(ValueType t) { type = t; }
+		
+		template <typename T>
+		T getUInt() const {
+			switch(type) {
+				case ValueType::int64:
+					return static_cast<T>(static_cast<uint64_t>(data.uint64));
+				case ValueType::int32:
+					return static_cast<T>(static_cast<uint32_t>(data.uint64));
+				default:
+					throw runtime_error("Incompatible type with integer.");
+			}
+		}
+
+		void setUInt(uint64_t x) {
+			data.uint64 = x;
+		}
+
+		void promoteTo(const Value &rhs) {
+			if(type == rhs.type) return;
+			type = rhs.type;
+			switch(type) {
+				case ValueType::int64:
+					setUInt(getUInt<uint64_t>());
+					break;
+				case ValueType::int32:
+					setUInt(getUInt<uint32_t>());
+					break;
+			}
+		}
+};
+
 class Node {
 	public:
 		virtual void accept(Visitor &v) = 0;	
@@ -87,6 +128,12 @@ class DeclarationNode : public Node {
 			if(expression == nullptr) throw runtime_error("No expression provided in " + name + "variable."); 
 		}
 		~DeclarationNode() override { delete expression; }
+};
+
+class ParamNode : public DeclarationNode {
+	public:
+		Value v;
+		string name;
 };
 
 class AssignmentNode : public Node {

@@ -1,7 +1,7 @@
-#include "parser.h"
-#include "lexer.h"
-#include "node.h"
-#include "symbol.h"
+#include "../headers/parser.h"
+#include "../headers/lexer.h"
+#include "../headers/node.h"
+#include "../headers/symbol.h"
 #include <stdexcept>
 #include <string>
 

@@ -1,4 +1,4 @@
-#include "symbol.h"
+#include "../headers/symbol.h"
 
 bool issymbol(const char a) {
 	switch(a) {

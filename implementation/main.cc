@@ -8,10 +8,10 @@
 #include <unistd.h>
 #include <vector>
 #include "/public/read.h" // IWYU pragma: keep
-#include "node.h"
-#include "parser.h"
-#include "lexer.h"
-#include "visitor.h"
+#include "../headers/node.h"
+#include "../headers/parser.h"
+#include "../headers/lexer.h"
+#include "../headers/visitor.h"
 
 using namespace std;
 
@@ -59,6 +59,6 @@ int main(int argc, char** argv) {
 	AST->accept(dv);
 	AST->accept(sv);
 	AST->accept(tv);
-	// AST->accept(ev);
+	AST->accept(ev);
 	delete(AST);
 }

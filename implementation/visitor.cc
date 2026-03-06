@@ -1,6 +1,6 @@
-#include "visitor.h"
-#include "lexer.h"
-#include "node.h"
+#include "../headers/visitor.h"
+#include "../headers/lexer.h"
+#include "../headers/node.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -118,11 +118,13 @@ void PrintVisitor::visit(DeclarationNode& node) {
 
 void PrintVisitor::visit(COCNode& node) {
 	tabHelper();
-	std::cout << node.name << " : params ->";
+	std::cout << node.name << " : params ->\n";
+	depth++;
 	for(int i = 0; i < node.expressions.size(); i++) {
 		node.expressions.at(i)->accept(*this);
 		if(i + 1 < node.expressions.size()) cout << ", ";
 	}
+	depth--;
 }
 
 void PrintVisitor::visit(VariableNode& node) {
@@ -132,7 +134,7 @@ void PrintVisitor::visit(VariableNode& node) {
 
 void PrintVisitor::visit(PrintNode& node) {
 	tabHelper();
-	std::cout << "print: ";
+	std::cout << "print:\n";
 	node.expression->accept(*this);
 }
 
@@ -218,45 +220,97 @@ void SemanticsVisitor::visit(COCNode& node){
 
 //EvaluatorVisitor
 
+Value makeUInt64(uint64_t val) {
+	Value v;
+	v.setType(ValueType::int64);
+	v.setUInt(val);
+	return v;
+}
+
+Value EvaluatorVisitor::getRuntimeValUI64(const std::string &name) {
+	return makeUInt64(runtime.back()[name].getUInt<uint64_t>());
+}
+
+Value& EvaluatorVisitor::getRuntimeVal(const std::string &name) {
+	for(auto iter = runtime.rbegin(); iter != runtime.rend(); iter++) {
+		auto found = iter->find(name);
+		if(found != iter->end())
+			return found->second;
+	}
+	throw runtime_error("Variable not found: " + name);
+}
+
 void EvaluatorVisitor::visit(ProgramNode& node) {
 	Visitor::visit(node);
 	// std::cout << stack.back() << std::endl;
 }
 
+void EvaluatorVisitor::visit(ScopeNode& node) {
+	runtime.push_back({});
+	size_t stackStart = stack.size();
+	for(const auto &d : node.scope->context) {
+		Value v;
+		d.second->expression->accept(*this);
+		v = stack.back();
+		runtime.back()[d.first] = v;
+		stack.pop_back();
+	}
+	Visitor::visit(node);
+	stack.resize(stackStart);
+	runtime.pop_back();
+}
+
 void EvaluatorVisitor::visit(NumberNode& node) {
-	stack.push_back(node.val);
+	stack.push_back(makeUInt64(node.val));
+}
+
+void promote(Value &v1, Value &v2) {
+	ValueType t1 = v1.getType();
+	ValueType t2 = v2.getType();
+
+	if(typeRank(t1) <= typeRank(t2)) {
+		v2.promoteTo(v1);
+	}
+	else {
+		v1.promoteTo(v2);
+	}
 }
 
 void EvaluatorVisitor::visit(OperandNode& node) { 
 	Visitor::visit(node);
-	int64_t right = stack.back();
+	Value right = stack.back();
 	stack.pop_back();
-	int64_t left = stack.back();
+	Value left = stack.back();
 	stack.pop_back();
-	int64_t result = 0;
+	Value result;
+	promote(left, right);
+	result.setType(left.getType());
 	switch(node.type) {
 		case TokenType::Plus:
-			result = left + right;
+			result.setUInt(left.getUInt<uint64_t>() + right.getUInt<uint64_t>());
 			break;
 		case TokenType::Minus:
-			result = left - right;
+			result.setUInt(left.getUInt<uint64_t>() - right.getUInt<uint64_t>());
 			break;
 		case TokenType::Star:
-			result = left * right;
+			result.setUInt(left.getUInt<uint64_t>() * right.getUInt<uint64_t>());
 			break;
 		case TokenType::Slash:
-			if(right == 0) throw runtime_error("Divide by zero: " + to_string(left)); 
-			result = left / right;
+			if(right.getUInt<uint64_t>() == 0) throw runtime_error("Divide by zero: " + to_string(left.getUInt<uint64_t>())); 
+			result.setUInt(left.getUInt<uint64_t>() / right.getUInt<uint64_t>());
 			break;
 		case TokenType::Exponent:
-			result = 1;
-			while(right > 0) {
-				if(right % 2 == 1) {
-					result *= left;
+			uint64_t res = 1;
+			uint64_t l = left.getUInt<uint64_t>();
+			uint64_t r = right.getUInt<uint64_t>();
+			while(r > 0) {
+				if(r % 2 == 1) {
+					res *= l;
 				}
-				left *= left;
-				right /= 2;
+				l *= l;
+				r /= 2;
 			}
+			result.setUInt(res);
 			break;
 	}
 	stack.push_back(result);
@@ -264,32 +318,52 @@ void EvaluatorVisitor::visit(OperandNode& node) {
 
 void EvaluatorVisitor::visit(AssignmentNode& node) {
 	node.expression->accept(*this);
-	runtime[node.name] = stack.back();
+	Value &v = getRuntimeVal(node.name);
+	switch(v.getType()) {
+		case ValueType::int64:
+			stack.back().setType(ValueType::int64);
+			v.setUInt(stack.back().getUInt<uint64_t>());
+			break;
+		case ValueType::int32:
+			stack.back().setType(ValueType::int32);
+			v.setUInt(stack.back().getUInt<uint32_t>());
+			break;
+	}
 	stack.pop_back();
 }
 
 void EvaluatorVisitor::visit(DeclarationNode& node) {
 	node.expression->accept(*this);
-	runtime[node.name] = stack.back();
+	switch(node.varType) {
+		case ValueType::int64:
+			stack.back().setType(ValueType::int64);
+			runtime.back()[node.name].setUInt(stack.back().getUInt<uint64_t>());
+			break;
+		case ValueType::int32:
+			stack.back().setType(ValueType::int32);
+			runtime.back()[node.name].setUInt(stack.back().getUInt<uint32_t>());
+			break;
+	}
 	stack.pop_back();
 }
 
 void EvaluatorVisitor::visit(VariableNode& node) {
-	stack.push_back(runtime[node.name]);
+	Value& v = getRuntimeVal(node.name);
+	stack.push_back(v);
 }
 
 void EvaluatorVisitor::visit(COCNode& node) {
-	if(node.expressions.size() == 1) {
+	if(node.expressions.size() == 1 && node.resolution == COCResolution::Cast) {
 		node.expressions[0]->accept(*this);
-		int64_t val = stack.back();
-		stack.pop_back();
+		Value &v = stack.back();
+		v.setType(ValueType::int64);
 		switch(node.type) {
 			case ValueType::int64:
-				stack.push_back(val);
-				break;
+				break; 
 			case ValueType::int32:
-				int32_t narrow = static_cast<int32_t>(val);;
-				stack.push_back(static_cast<int64_t>(narrow));
+				uint32_t n = v.getUInt<uint32_t>();
+				v.setType(ValueType::int32);
+				v.setUInt(n);
 				break;
 		}
 	}
@@ -301,7 +375,16 @@ void EvaluatorVisitor::visit(COCNode& node) {
 
 void EvaluatorVisitor::visit(PrintNode& node) {
 	Visitor::visit(node);
-	std::cout << stack.back() << std::endl;
+	string s = "\n";
+	switch(stack.back().getType()) {
+		case ValueType::int64:
+			s += to_string(stack.back().getUInt<uint64_t>());
+			break;
+		case ValueType::int32:
+			s += to_string(stack.back().getUInt<uint32_t>());
+			break;
+	}
+	std::cout << s << std::endl;
 }
 
 //TypeVisitor

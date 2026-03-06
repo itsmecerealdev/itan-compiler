@@ -1,5 +1,5 @@
-#include "lexer.h"
-#include "symbol.h"
+#include "../headers/lexer.h"
+#include "../headers/symbol.h"
 #include <iostream>
 
 using namespace std;

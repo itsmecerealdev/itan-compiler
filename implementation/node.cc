@@ -1,5 +1,5 @@
-#include "node.h"
-#include "visitor.h"
+#include "../headers/node.h"
+#include "../headers/visitor.h"
 
 void ProgramNode::accept(Visitor &v) { v.visit(*this); }
 void ScopeNode::accept(Visitor &v) { v.visit(*this); }
