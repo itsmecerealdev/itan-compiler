@@ -149,12 +149,47 @@ Node* Parser::parseScope() {
 	return new ScopeNode(statements);
 }
 
+ParamNode* Parser::parseParam() {
+	Token type = expect(TokenType::Type);
+	Token id = expect(TokenType::Identifier);
+	Node* optexpr = nullptr;
+	if(peek() == TokenType::Assignment) {
+		consume();
+		optexpr = parseFactor();
+	}
+	return new ParamNode(type.vartype, id.name, optexpr);
+}
+
+Node* Parser::parseFuncDeclaration() {
+	Token id = consume();
+	expect(TokenType::LParen);
+	vector<ParamNode*> params;
+	while(peek() != TokenType::RParen) {
+		params.push_back(parseParam());
+		if(peek() == TokenType::Comma) {
+			consume();
+		}
+	}
+	expect(TokenType::RParen);
+	Token retType;
+	if(peek() == TokenType::Return) {
+		expect(TokenType::Return);
+		retType = expect(TokenType::Type);
+	}
+	else retType.name = "void";  
+	Node* scope = parseScope();
+	return new FuncDeclNode(id.name, params, scope);
+}
+
 Node* Parser::parseProgram() {
 	vector<Node*> scopes;
 	while(peek() != TokenType::End) {
 		if(peek() == TokenType::LBrace) {
 			scopes.push_back(parseScope());
 		} 
+		else if (peek() == TokenType::Identifier && peekAhead() == TokenType::LParen) {
+			scopes.push_back(parseFuncDeclaration());	
+		}
 		else {
 			scopes.push_back(parseStatement());
 		}

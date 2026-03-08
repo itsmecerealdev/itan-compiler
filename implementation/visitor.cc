@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <functional>
 #include <stdexcept>
 
 //Helper functions
@@ -28,6 +29,17 @@ void Visitor::visit(VariableNode& node) { }
 //These are overridden if the concrete visitor requires some functionality other than walking the tree
 void Visitor::visit(ProgramNode &node) {
 	if(node.global) node.global->accept(*this);
+}
+
+void Visitor::visit(ParamNode &node) {
+	if(node.expression) node.expression->accept(*this);
+}
+
+void Visitor::visit(FuncDeclNode &node) {
+	if(node.params.size()) {
+		for(const auto p : node.params) p->accept(*this);
+	}
+	if(node.scope) node.scope->accept(*this);
 }
 
 void Visitor::visit(ScopeNode &node) {
@@ -73,6 +85,22 @@ void PrintVisitor::visit(ProgramNode &node) {
 	std::cout << "Program" << std::endl;
 	depth++;
 	if(node.global) node.global->accept(*this);
+}
+
+void PrintVisitor::visit(ParamNode &node) {
+	tabHelper();
+	std::cout << "Param " << node.name << "\n";
+	depth++;
+	Visitor::visit(node);
+	depth--;
+}
+
+void PrintVisitor::visit(FuncDeclNode &node) {
+	tabHelper();
+	std::cout << "Func " << node.name << "\n";
+	depth++;
+	Visitor::visit(node);
+	depth--;
 }
 
 void PrintVisitor::visit(ScopeNode &node) {
@@ -371,7 +399,7 @@ void EvaluatorVisitor::visit(COCNode& node) {
 
 void EvaluatorVisitor::visit(PrintNode& node) {
 	Visitor::visit(node);
-	string s = "\n";
+	string s = "";
 	switch(stack.back().getType()) {
 		case ValueType::int64:
 			s += to_string(stack.back().getUInt<uint64_t>());

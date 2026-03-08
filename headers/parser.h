@@ -14,8 +14,8 @@ class Parser {
 		Node* parseExponent();
 		Node* parseTerm();
 		Node* parseExpression();
-		Node* parseExprStatement(); //Seperates statement structure from expression structure
-			
+		Node* parseExprStatement(); 
+
 		Node* parseCastOrCall();
 		Node* parseAssignment();
 		Node* parseDeclaration();
@@ -23,6 +23,8 @@ class Parser {
 
 		Node* parseStatement();
 		Node* parseScope();
+		ParamNode* parseParam();
+		Node* parseFuncDeclaration();
 
 		Token consume();
 		TokenType peek();

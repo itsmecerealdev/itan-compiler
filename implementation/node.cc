@@ -2,6 +2,8 @@
 #include "../headers/visitor.h"
 
 void ProgramNode::accept(Visitor &v) { v.visit(*this); }
+void FuncDeclNode::accept(Visitor &v) { v.visit(*this); }
+void ParamNode::accept(Visitor &v) { v.visit(*this); }
 void ScopeNode::accept(Visitor &v) { v.visit(*this); }
 void NumberNode::accept(Visitor &v) { v.visit(*this); }
 void AssignmentNode::accept(Visitor &v) { v.visit(*this); }

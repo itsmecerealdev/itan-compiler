@@ -61,6 +61,12 @@ vector<Token> Lexer::tokenizeBuffer() {
 				case '}':
 					result.push_back(Token{TokenType::RBrace, ValueType::none, "", 0});
 					break;
+				case '>':
+					if(result.back().tokentype == TokenType::Assignment) {
+						result.back().tokentype = TokenType::Return;
+						bufferIndex++;
+					}
+					break;
 			}
 			bufferIndex++;
 			continue;

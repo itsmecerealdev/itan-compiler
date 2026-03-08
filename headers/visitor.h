@@ -13,6 +13,8 @@ using Runtime = std::vector<std::unordered_map<string, Value>>;
 class Visitor {
 	public:
 		virtual void visit(ProgramNode &node);
+		virtual void visit(FuncDeclNode &node);
+		virtual void visit(ParamNode &node);
 		virtual void visit(ScopeNode &node);
 		virtual void visit(NumberNode& node);
 		virtual void visit(OperandNode& node);
@@ -31,6 +33,8 @@ class PrintVisitor : public Visitor {
 		void tabHelper();
 	public:
 		void visit(ProgramNode &node) override;
+		void visit(FuncDeclNode &node) override; 
+		void visit(ParamNode &node) override;
 		void visit(ScopeNode &node) override;
 		void visit(NumberNode& node) override;
 		void visit(OperandNode& node) override;

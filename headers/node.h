@@ -74,6 +74,30 @@ class Node {
 		virtual ~Node() = default;
 };
 
+class ScopeNode;
+
+class ParamNode : public Node {
+	public:
+		ValueType type;
+		string name;
+		Node* expression;
+		void accept(Visitor &v) override;
+		ParamNode(ValueType varType, string inname, Node* inexpression) : type(varType), name(inname), expression(inexpression) {}
+		~ParamNode() override { if (expression != nullptr) delete expression; }
+};
+
+class FuncDeclNode : public Node {
+	public:
+		string name;
+		vector<ParamNode*> params;
+		Node* scope;
+		void accept(Visitor &v) override;
+		FuncDeclNode(string inname, vector<ParamNode*> inparams, Node* inscope) : name(inname), params(std::move(inparams)), scope(inscope) {
+			if(!scope) throw runtime_error("Function declaration " + name + " is missing a function body.");
+		}
+		~FuncDeclNode() override { for(ParamNode* c : params) { delete c; } delete scope; }
+};
+
 class ScopeNode: public Node {
 	public:
 		vector<Node*> statements;
@@ -127,13 +151,7 @@ class DeclarationNode : public Node {
 		DeclarationNode(ValueType intype, string inname, Node* inexpression) : varType(intype), name(inname), expression(inexpression) {
 			if(expression == nullptr) throw runtime_error("No expression provided in " + name + "variable."); 
 		}
-		~DeclarationNode() override { delete expression; }
-};
-
-class ParamNode : public DeclarationNode {
-	public:
-		Value v;
-		string name;
+		~DeclarationNode() override { if(expression) delete expression; }
 };
 
 class AssignmentNode : public Node {
