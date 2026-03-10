@@ -30,6 +30,7 @@
   - ,
   - {
   - }
+  - => (return)
 
 ### Statement vs. Expression
 - In this language, a statement is a block of anything terminated by a ;
@@ -37,6 +38,7 @@
     - x = 7 assigment statement
     - int32 x = 5 declaration statement
     - x + 7 * 9 ^ (2 * 1) expression statement
+    - => 7; == "return int64(7)"
 - On the other hand, an expression are the "functionalities" in the statement.
   - This can be: (subject to change)
     - an integer literal : 5;
@@ -105,12 +107,44 @@
   - casts are not technically functions in this lang, they construct a new variable in place with the proper widening/narrowing required
     - When types other than ints are added, I will also add relevant type conversion restrictions. 
 
+## User Defined Functions (Not thoroughly tested- expect bugs)
+
+- The architecture of a user defined function is quite simple
+  - The only hard set rule currently is the "paired return rule"
+    - This rule states if your function signature contains a return (=>), then your function body must ALSO contain a return.
+      - If you wish to return nothing, do not include a return in the signature. Return statements in "void" functions still work, and incorrectly return whatever expression they contain to the stack, but that is later-me's problem. Now me is just happy this works at ALL.
+     
+-To call a user defined function, it is like calling a C++ function with modifications to how parameter defaulting works
+  - In C++, to call a func with signature foo(int x, int y = 32) - foo(7) will set x = 7, y = 32.
+  - Not in itan
+    - in itan, your call must have as many expressions as parameters. To perform this same call, you must do foo(7,);
+      - It is annoying, but has one AMAZING upside.
+        - If the func signature was instead foo(int x = 7, int y) - C++ cannot default x in any instance. foo(32) does not set x = 7, y = 32.
+        - BUT in itan, with foo(,32), it DOES. ABSOLUTE    CINEMA 
+``` 
+foo(int64 i = 5, int64 y = 7) => int64 {
+  ...
+  ...
+  => i + j;
+}
+```
+```
+bar(int64 k = 12) {
+  k = k + 12;
+  =>;
+  5 + 5;
+}
+```
+- The 5 + 5; expression here is properly orphaned as unreachable code.
+```
+foo2(int64 L = 17) => int32 {
+  => int32(L = 8);
+}
+```
+- Return type is int32? must cast to int32 first.
+
 ## Planned 
-- Functions
-  - I plan on adding a special functionality for parameter defaults
-     - Foo( , x); will be valid, and the comma with no expression before will implicitly use the default val in the parameter. 
 - overflow protection
-- FINISHING SCOPES. EVALUATORVISITOR DOES **NOT** CURRENTLY WORK WITH SCOPES. DO NOT TEST THEM WITH THE EV ENABLED.
 
 ## Running an example test.it file.
 
@@ -121,51 +155,65 @@
     - if you put print( ) around it, you can see it does evaluate.
 
 ```it
-int32 x = int32(5);
-x = x + 5;
-x * x + 2 ^ 3;
-int64(x);
-print(x);
-```
+foo (int64 i = 5, int64 j = 7) => int64 {
+    print(i);
+    print(j);
+}
 
+print(foo());
+print(foo(7));
+print(foo(,6));
+```
+- Function calls can exist in global space, and honestly I don't know if this will be "fixed" to only allowing them and executing them in some "main" function or not any time soon, if ever
+  - This may go beyond the intended scope of the project (user defined functions were well beyond the intended scope of a funny little math programming lang, but here I am 2 and a half weeks and like 40 hours of development time later successfully (I think) adding them.)
 ### Example test file execution and output
 
 - **Note:** All files must have `.it` extensions. Comments are not currently supported.  
-- To "compile" the file, compile *.cc in the directory to generate the interpreter a.out file
+- To "compile" the file, first do "make" in the directory to generate the interpreter a.out file
   -  then, type "./a FILENAME"
     - Don't include the extension, as it is added by the compiler. JUST the filename. 
-- The third line evaluates but does not assign anywhere — it's “orphaned.” Wrap it in `print()` to see its result.
-
-```it
-int32 x = int32(5);
-x = x + 5;
-x * x + 2 ^ 3;
-int64(x);
-print(x);
-```
 
 ### Output of the example
 
 Not-so-pretty printer
 ```plaintext
-Program<br>
-    Declaration x =
-      int32 : params -> Number(5)
-    Assignment x =
-        Operand 1
-            Variable x
-            Number(5)
-    Operand 1
-        Operand 3
-            Variable x
-            Variable x
-        Operand 5
-            Number(2)
-            Number(3)
-    int64 : params -> Variable x
-    print: Variable x
+Program
+    {
+        Func foo
+            Param i
+                Number(5)
+            Param j
+                Number(7)
+            {
+                print:
+                Variable i
+                print:
+                Variable j
+                Return:
+                    Operand 1
+                        Variable i
+                        Variable j
+            }
+        print:
+        foo : params ->
+        print:
+        foo : params ->
+            Number(7)
+        print:
+        foo : params ->
+            ,
+            Number(6)
+    }
 ```
-
--Evaluation print()<br>
-10
-    
+Evaluation-
+```
+5
+7
+12
+7
+7
+14
+5
+6
+11
+```
