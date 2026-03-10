@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <format>
 #include <functional>
+#include <ios>
 #include <stdexcept>
 
 //Helper functions
@@ -259,6 +260,7 @@ void SemanticsVisitor::visit(FuncDeclNode &node) {
 
 void SemanticsVisitor::visit(ReturnNode &node) {
 	returned = true;
+	if(node.expression) node.expression->accept(*this);
 }
 
 void SemanticsVisitor::visit(ParamNode &node) {
@@ -566,7 +568,10 @@ ValueType getFuncDeclType(const string &name, Scope* scope) {
 }
 
 void TypeVisitor::visit(ReturnNode &node) {
-	Visitor::visit(node);
+	if(node.expression) {
+		node.expression->accept(*this);
+		node.type = stack.back();
+	}
 	if(funcType != stack.back()) {
 		throw std::runtime_error("Return type does not match expected type of function");
 	}
