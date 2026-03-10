@@ -333,7 +333,6 @@ void EvaluatorVisitor::visit(ParamNode &node) {
 }
 
 void EvaluatorVisitor::visit(ReturnNode &node) {
-	std::cout << "In return node" << std::endl;
 	returned = true;
 	if(node.expression) node.expression->accept(*this);
 }
