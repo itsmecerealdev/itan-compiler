@@ -223,6 +223,7 @@ bool stackContains(const string &name, Scope* scope) {
 	Scope* p = scope;
 	while(p) {
 		if(p->context.contains(name)) return true;
+		if(p->paramContext.contains(name)) return true;
 		p = p->parent;
 	}
 	return false;
@@ -451,6 +452,7 @@ void EvaluatorVisitor::visit(DeclarationNode& node) {
 
 void EvaluatorVisitor::visit(VariableNode& node) {
 	Value& v = getRuntimeVal(node.name);
+	
 	stack.push_back(v);
 }
 
@@ -485,7 +487,7 @@ void EvaluatorVisitor::visit(COCNode& node) {
 		if(!func) {
 			throw std::runtime_error("Function declaration for: " + node.name + " not found.");
 		}
-		for(int i = 0; i < func->params.size() - 1; i++) {
+		for(int i = 0; i < func->params.size(); i++) {
 			if(i < node.expressions.size() && node.expressions.at(i)) {
 				Value v;
 				v.setType(func->params.at(i)->type);
@@ -526,6 +528,16 @@ void EvaluatorVisitor::visit(PrintNode& node) {
 }
 
 //TypeVisitor
+
+ParamNode* getParam(const string &name, Scope* scope) {
+	Scope* p = scope;
+	while(p) {
+		if(p->paramContext.contains(name)) return p->paramContext[name];
+		p = p->parent;
+	}
+	return nullptr;
+}
+
 ValueType getFuncDeclType(const string &name, Scope* scope) {
 	Scope* p = scope;
 	while(p) {
@@ -583,8 +595,12 @@ void TypeVisitor::visit(NumberNode& node) {
 
 void TypeVisitor::visit(VariableNode& node) {
 	DeclarationNode* dec = getDeclaration(node.name, currscope);
+	ParamNode* par = getParam(node.name, currscope);
 	if(dec) {
 		stack.push_back(dec->varType);	
+	}
+	else if(par) {
+		stack.push_back(par->type);
 	}
 }
 
