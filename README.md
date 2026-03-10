@@ -116,11 +116,10 @@
      
 -To call a user defined function, it is like calling a C++ function with modifications to how parameter defaulting works
   - In C++, to call a func with signature foo(int x, int y = 32) - foo(7) will set x = 7, y = 32.
-  - Not in itan
+  - This works (in some cases) in ITAN. It mimics C++s right aligned defaulting pattern, BUT you can skip parameters inbetween params in the call like bar(7, ,5);
     - in itan, your call must have as many expressions as parameters. To perform this same call, you must do foo(7,);
-      - It is annoying, but has one AMAZING upside.
-        - If the func signature was instead foo(int x = 7, int y) - C++ cannot default x in any instance. foo(32) does not set x = 7, y = 32.
-        - BUT in itan, with foo(,32), it DOES. ABSOLUTE    CINEMA 
+      - If the func signature was instead foo(int x = 7, int y) - C++ cannot default x in any instance. foo(32) does not set x = 7, y = 32.
+      - BUT in itan, with foo(,32), it DOES. ABSOLUTE    CINEMA 
 ``` 
 foo(int64 i = 5, int64 y = 7) => int64 {
   ...
