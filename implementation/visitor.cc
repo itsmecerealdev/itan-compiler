@@ -243,12 +243,22 @@ DeclarationNode* getDeclaration(const string &name, Scope* scope) {
 
 //SemanticVisitor overrides
 void SemanticsVisitor::visit(FuncDeclNode &node) {
+	inFunc = true;
 	if(node.params.size()) {
 		for(const auto p : node.params) {
 			p->accept(*this);
 		}
 	}
-	node.scope->accept(*this);	
+	node.scope->accept(*this);
+	if(node.type != ValueType::none && returned == false) {
+		throw std::runtime_error("Function with declared return type does not return.");
+	}
+	inFunc = false;
+	returned = false;
+}
+
+void SemanticsVisitor::visit(ReturnNode &node) {
+	returned = true;
 }
 
 void SemanticsVisitor::visit(ParamNode &node) {

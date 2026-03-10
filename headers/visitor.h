@@ -60,6 +60,8 @@ class DeclarationVisitor : public Visitor {
 
 class SemanticsVisitor : public Visitor {
 	private:
+		bool inFunc = false;
+		bool returned = false;
 		Scope* currscope;
 		unordered_map<string, ValueType> typeKeywords;
 		std::string currentInit;
@@ -70,6 +72,7 @@ class SemanticsVisitor : public Visitor {
 	public:
 		void visit(FuncDeclNode &node) override;
 		void visit(ParamNode &node) override;
+		void visit(ReturnNode &node) override;
 		void visit(ScopeNode& node) override;
 		void visit(VariableNode& node) override;
 		void visit(AssignmentNode& node) override; 
