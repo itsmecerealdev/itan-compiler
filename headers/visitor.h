@@ -83,6 +83,7 @@ class EvaluatorVisitor : public Visitor {
 		Scope* currscope;
 		Runtime runtime;
 		bool returned = false;
+		Value retval;
 		vector<Value> stack;
 		Value getRuntimeValUI64(const std::string &name); 
 		Value &getRuntimeVal(const std::string &name); 

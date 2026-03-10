@@ -165,7 +165,10 @@ void PrintVisitor::visit(COCNode& node) {
 	depth++;
 	for(int i = 0; i < node.expressions.size(); i++) {
 		if(node.expressions.at(i)) node.expressions.at(i)->accept(*this);
-		if(i + 1 < node.expressions.size()) cout << ", ";
+		else {tabHelper();} //If no expression, the , will end up in the wrong spot without this. :skull:
+		if(i + 1 < node.expressions.size()) {
+			cout << ",\n";
+		}
 	}
 	depth--;
 }
@@ -352,13 +355,18 @@ void EvaluatorVisitor::visit(ScopeNode& node) {
 	// Visitor::visit(node);
 	for(const auto e : node.statements) {
 		if(returned) {
-			stackStart++; //very awful solution- but.... deal with it.
 			break;
 		}
 		e->accept(*this);
 	}
+	if(returned) {
+		retval = stack.back();
+	}
+	stack.resize(stackStart); // Yes, the conditional is needed 2x. yes, it's ugly. Yes, I know.
+	if(returned){
+		stack.push_back(retval);
+	}
 	returned = false;
-	stack.resize(stackStart);
 	runtime.pop_back();
 	currscope = node.scope->parent;
 }
@@ -507,7 +515,6 @@ void EvaluatorVisitor::visit(COCNode& node) {
 				stack.pop_back();
 				runtime.back()[func->params.at(i)->name] = v;
 			}
-			
 		}
 		func->scope->accept(*this);
 	}
@@ -525,6 +532,7 @@ void EvaluatorVisitor::visit(PrintNode& node) {
 			break;
 	}
 	std::cout << s << std::endl;
+	stack.pop_back();
 }
 
 //TypeVisitor
