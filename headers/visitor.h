@@ -15,6 +15,7 @@ class Visitor {
 		virtual void visit(ProgramNode &node);
 		virtual void visit(FuncDeclNode &node);
 		virtual void visit(ParamNode &node);
+		virtual void visit(ReturnNode &node);
 		virtual void visit(ScopeNode &node);
 		virtual void visit(NumberNode& node);
 		virtual void visit(OperandNode& node);
@@ -34,6 +35,7 @@ class PrintVisitor : public Visitor {
 	public:
 		void visit(ProgramNode &node) override;
 		void visit(FuncDeclNode &node) override; 
+		void visit(ReturnNode &node) override;
 		void visit(ParamNode &node) override;
 		void visit(ScopeNode &node) override;
 		void visit(NumberNode& node) override;
@@ -49,6 +51,8 @@ class DeclarationVisitor : public Visitor {
 	private:
 		vector<Scope*> scopes;
 	public:
+		void visit(FuncDeclNode &node) override;
+		void visit(ParamNode &node) override;
 		void visit(ScopeNode& node) override;
 		void visit(DeclarationNode& node) override;
 		DeclarationVisitor() {}
@@ -64,6 +68,8 @@ class SemanticsVisitor : public Visitor {
 			typeKeywords["int64"] = ValueType::int64;
 		}
 	public:
+		void visit(FuncDeclNode &node) override;
+		void visit(ParamNode &node) override;
 		void visit(ScopeNode& node) override;
 		void visit(VariableNode& node) override;
 		void visit(AssignmentNode& node) override; 
@@ -74,12 +80,17 @@ class SemanticsVisitor : public Visitor {
 
 class EvaluatorVisitor : public Visitor {
 	private:
+		Scope* currscope;
 		Runtime runtime;
+		bool returned = false;
 		vector<Value> stack;
 		Value getRuntimeValUI64(const std::string &name); 
 		Value &getRuntimeVal(const std::string &name); 
 	public:
 		void visit(ProgramNode& node) override;
+		void visit(FuncDeclNode &node) override;
+		void visit(ParamNode &node) override;
+		void visit(ReturnNode &node) override;
 		void visit(ScopeNode& node) override;
 		void visit(NumberNode& node) override;
 		void visit(OperandNode& node) override;
@@ -92,10 +103,14 @@ class EvaluatorVisitor : public Visitor {
 
 class TypeVisitor : public Visitor {
 	private:
+		ValueType funcType = ValueType::none;
 		Scope* currscope;
 		vector<ValueType> stack;
 	public:
+		void visit(FuncDeclNode &node) override;
+		void visit(ParamNode &node) override;
 		void visit(ScopeNode &node) override;
+		void visit(ReturnNode &node) override;
 		void visit(COCNode& node) override;
 		void visit(ProgramNode& node) override;
 		void visit(NumberNode& node) override;

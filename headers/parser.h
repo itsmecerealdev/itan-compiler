@@ -20,6 +20,7 @@ class Parser {
 		Node* parseAssignment();
 		Node* parseDeclaration();
 		Node* parseFunction();
+		Node* parseReturn();
 
 		Node* parseStatement();
 		Node* parseScope();

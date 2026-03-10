@@ -51,14 +51,14 @@ int main(int argc, char** argv) {
 
 
 	PrintVisitor pv;
-	// DeclarationVisitor dv;
-	// SemanticsVisitor sv;
-	// TypeVisitor tv;
-	// EvaluatorVisitor ev;
+	DeclarationVisitor dv;
+	SemanticsVisitor sv;
+	TypeVisitor tv;
+	EvaluatorVisitor ev;
 	AST->accept(pv);
-	// AST->accept(dv);
-	// AST->accept(sv);
-	// AST->accept(tv);
-	// AST->accept(ev);
+	AST->accept(dv);
+	AST->accept(sv);
+	AST->accept(tv);
+	AST->accept(ev);
 	delete(AST);
 }

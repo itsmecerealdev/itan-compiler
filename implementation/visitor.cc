@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <filesystem>
+#include <format>
 #include <functional>
 #include <stdexcept>
 
@@ -42,8 +44,11 @@ void Visitor::visit(FuncDeclNode &node) {
 	if(node.scope) node.scope->accept(*this);
 }
 
+void Visitor::visit(ReturnNode& node) { 
+	if(node.expression) node.expression->accept(*this);
+}
+
 void Visitor::visit(ScopeNode &node) {
-	if(node.statements.size() <= 0) return;
 	for(const auto &n : node.statements) {
 		n->accept(*this);
 	}
@@ -65,7 +70,7 @@ void Visitor::visit(DeclarationNode& node) {
 void Visitor::visit(COCNode& node) {
 	if(node.expressions.size() <= 0) return;
 	for(const auto &n : node.expressions) {
-		n->accept(*this);
+		if(n) n->accept(*this);
 	}
 }
 
@@ -76,7 +81,7 @@ void Visitor::visit(PrintNode& node) {
 
 void PrintVisitor::tabHelper() {
 	for(int i = 0; i < depth; i++) {
-		std::cout << "\t";
+		std::cout << "    ";
 	}
 }
 
@@ -103,12 +108,22 @@ void PrintVisitor::visit(FuncDeclNode &node) {
 	depth--;
 }
 
+void PrintVisitor::visit(ReturnNode& node) {
+	tabHelper();
+	std::cout << "Return: " << std::endl;
+	depth++;
+	Visitor::visit(node);
+	depth--;
+}
+
 void PrintVisitor::visit(ScopeNode &node) {
 	tabHelper();
 	std::cout << "{" << std::endl;
 	depth++;
 	if(node.statements.size()) {
-		Visitor::visit(node);
+		for(const auto s : node.statements) {
+			s->accept(*this);
+		}
 	}
 	depth--;
 	tabHelper();
@@ -149,7 +164,7 @@ void PrintVisitor::visit(COCNode& node) {
 	std::cout << node.name << " : params ->\n";
 	depth++;
 	for(int i = 0; i < node.expressions.size(); i++) {
-		node.expressions.at(i)->accept(*this);
+		if(node.expressions.at(i)) node.expressions.at(i)->accept(*this);
 		if(i + 1 < node.expressions.size()) cout << ", ";
 	}
 	depth--;
@@ -167,6 +182,25 @@ void PrintVisitor::visit(PrintNode& node) {
 }
 
 //DeclarationVisitor overrides
+
+void DeclarationVisitor::visit(ParamNode &node) {
+	if(scopes.back()->paramContext.size() && scopes.back()->paramContext.contains(node.name)) {
+		throw runtime_error("Double declaration of param: " + node.name +"\n");
+	}
+	scopes.back()->paramContext[node.name] = &node;
+}
+
+void DeclarationVisitor::visit(FuncDeclNode &node ) {
+	if(scopes.size()) scopes.front()->funcContext[node.name] = &node;
+	if(!scopes.empty()) {
+		node.scope->accept(*this);
+	}
+	if(node.params.size()) {
+		for(const auto p : node.params) {
+			p->accept(*this);
+		}
+	}
+}
 
 void DeclarationVisitor::visit(ScopeNode& node) {
 	if(!scopes.empty()) {
@@ -204,6 +238,21 @@ DeclarationNode* getDeclaration(const string &name, Scope* scope) {
 }
 
 //SemanticVisitor overrides
+void SemanticsVisitor::visit(FuncDeclNode &node) {
+	if(node.params.size()) {
+		for(const auto p : node.params) {
+			p->accept(*this);
+		}
+	}
+	node.scope->accept(*this);	
+}
+
+void SemanticsVisitor::visit(ParamNode &node) {
+	currentInit = node.name;
+	node.expression->accept(*this);
+	currentInit.erase();
+}
+
 void SemanticsVisitor::visit(ScopeNode &node) {
 	currscope = node.scope;
 	Visitor::visit(node);
@@ -269,7 +318,28 @@ void EvaluatorVisitor::visit(ProgramNode& node) {
 	// std::cout << stack.back() << std::endl;
 }
 
+void EvaluatorVisitor::visit(FuncDeclNode &node) { return; } // Nothing to do inside this in runtime. 
+
+void EvaluatorVisitor::visit(ParamNode &node) {
+	Value v;
+	v.setType(ValueType::none);
+	if(!node.expression) {
+		stack.push_back(v);
+		return;
+	}
+	else {
+		node.expression->accept(*this);
+	}
+}
+
+void EvaluatorVisitor::visit(ReturnNode &node) {
+	std::cout << "In return node" << std::endl;
+	returned = true;
+	if(node.expression) node.expression->accept(*this);
+}
+
 void EvaluatorVisitor::visit(ScopeNode& node) {
+	currscope = node.scope;
 	runtime.push_back({});
 	size_t stackStart = stack.size();
 	for(const auto &d : node.scope->context) {
@@ -279,9 +349,20 @@ void EvaluatorVisitor::visit(ScopeNode& node) {
 		runtime.back()[d.first] = v;
 		stack.pop_back();
 	}
-	Visitor::visit(node);
+	// Visitor::visit(node);
+	for(const auto e : node.statements) {
+		if(runtime.size() > 1) std::cout << " here " << std::endl;
+		if(returned) {
+			std::cout << "returned " << stack.size() << std::endl;
+			stackStart++; //very awful solution- but.... deal with it.
+			break;
+		}
+		e->accept(*this);
+	}
+	returned = false;
 	stack.resize(stackStart);
 	runtime.pop_back();
+	currscope = node.scope->parent;
 }
 
 void EvaluatorVisitor::visit(NumberNode& node) {
@@ -376,6 +457,17 @@ void EvaluatorVisitor::visit(VariableNode& node) {
 	stack.push_back(v);
 }
 
+FuncDeclNode* getFuncDecl(const string& name, Scope* scope) {
+	Scope* p = scope;
+	while(p) {
+		if(p->funcContext.contains(name)) {
+			return p->funcContext[name];
+		}
+		p = p->parent;
+	}
+	return nullptr;
+}
+
 void EvaluatorVisitor::visit(COCNode& node) {
 	if(node.expressions.size() == 1 && node.resolution == COCResolution::Cast) {
 		node.expressions[0]->accept(*this);
@@ -392,8 +484,33 @@ void EvaluatorVisitor::visit(COCNode& node) {
 		}
 	}
 	else {
-		//temporary
-		throw runtime_error("Currently, only casting is supported. Can only contain one expression.");
+		FuncDeclNode* func = getFuncDecl(node.name, currscope);
+		if(!func) {
+			throw std::runtime_error("Function declaration for: " + node.name + " not found.");
+		}
+		for(int i = 0; i < func->params.size() - 1; i++) {
+			if(i < node.expressions.size() && node.expressions.at(i)) {
+				Value v;
+				v.setType(func->params.at(i)->type);
+				node.expressions.at(i)->accept(*this);
+				v.setUInt(stack.back().getUInt<uint64_t>());
+				stack.pop_back();
+				runtime.back()[func->params.at(i)->name] = v;
+			}
+			else {
+				Value v;
+				v.setType(func->params.at(i)->type);
+				if(!func->params.at(i)->expression) {
+					throw std::runtime_error("Parameter: " + func->params.at(i)->name + " is non-default and has no value passed\n"); 
+				}
+				func->params.at(i)->expression->accept(*this);
+				v.setUInt(stack.back().getUInt<uint64_t>());
+				stack.pop_back();
+				runtime.back()[func->params.at(i)->name] = v;
+			}
+			
+		}
+		func->scope->accept(*this);
 	}
 }
 
@@ -412,6 +529,38 @@ void EvaluatorVisitor::visit(PrintNode& node) {
 }
 
 //TypeVisitor
+ValueType getFuncDeclType(const string &name, Scope* scope) {
+	Scope* p = scope;
+	while(p) {
+		if(p->funcContext.contains(name)) return p->funcContext[name]->type;
+		p = p->parent;
+	}
+	return ValueType::none;
+}
+
+void TypeVisitor::visit(ReturnNode &node) {
+	Visitor::visit(node);
+	if(funcType != stack.back()) {
+		throw std::runtime_error("Return type does not match expected type of function");
+	}
+}
+
+void TypeVisitor::visit(FuncDeclNode &node) {
+	funcType = node.type;
+	Visitor::visit(node);
+	stack.pop_back();
+	funcType = ValueType::none;
+}
+
+void TypeVisitor::visit(ParamNode &node) { 
+	if(node.expression) {
+		node.expression->accept(*this);
+		if(node.type != stack.back()) {
+			throw runtime_error("Param: " + node.name + " does not match the type of its expression.");
+		}
+		stack.pop_back();
+	}
+}
 
 void TypeVisitor::visit(ScopeNode &node) {
 	currscope = node.scope;
@@ -426,7 +575,8 @@ void TypeVisitor::visit(COCNode& node) {
 		stack.push_back(node.type);
 	}
 	else {
-		throw runtime_error("Only casts are supported for now.");
+		stack.push_back(getFuncDeclType(node.name, currscope));
+		// throw runtime_error("Only casts are supported for now.");
 	}
 }
 

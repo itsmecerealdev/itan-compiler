@@ -8,9 +8,13 @@
 #include <string>
 #include "lexer.h"
 
+class ParamNode;
+class FuncDeclNode;
 class DeclarationNode;
 
 using namespace std;
+using ParamMap = std::unordered_map<string, ParamNode*>;
+using FuncMap = std::unordered_map<string, FuncDeclNode*>;
 using ContextMap = std::unordered_map<string, DeclarationNode*>;
 
 enum class COCResolution : uint8_t {
@@ -25,6 +29,8 @@ class Scope {
 	public:
 		Scope* parent;
 		ContextMap context;	
+		FuncMap funcContext;
+		ParamMap paramContext;	
 };
 
 class Value {
@@ -76,6 +82,17 @@ class Node {
 
 class ScopeNode;
 
+class ReturnNode : public Node {
+	public:
+		ValueType type;
+		Node* expression;
+		void accept(Visitor &v) override;
+		ReturnNode(ValueType intype, Node* inexpression) : type(intype), expression(inexpression) {
+			if(type != ValueType::none && !expression) throw std::runtime_error("A typed return has no expression.");
+		}
+		~ReturnNode() override { delete expression; }
+};
+
 class ParamNode : public Node {
 	public:
 		ValueType type;
@@ -89,10 +106,12 @@ class ParamNode : public Node {
 class FuncDeclNode : public Node {
 	public:
 		string name;
+		ValueType type;	
 		vector<ParamNode*> params;
 		Node* scope;
 		void accept(Visitor &v) override;
-		FuncDeclNode(string inname, vector<ParamNode*> inparams, Node* inscope) : name(inname), params(std::move(inparams)), scope(inscope) {
+		FuncDeclNode(string inname, vector<ParamNode*> inparams, Node* inscope, ValueType intype) 
+			: name(inname), params(std::move(inparams)), scope(inscope), type(intype) {
 			if(!scope) throw runtime_error("Function declaration " + name + " is missing a function body.");
 		}
 		~FuncDeclNode() override { for(ParamNode* c : params) { delete c; } delete scope; }

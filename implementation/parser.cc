@@ -120,6 +120,13 @@ Node* Parser::parseFunction() {
 	return new PrintNode(exp);
 }
 
+Node* Parser::parseReturn() {
+	expect(TokenType::Return);
+	Node* exp = parseExpression();
+	expect(TokenType::StatementEnd);
+	return new ReturnNode(ValueType::none, exp);
+}
+
 Node* Parser::parseStatement() {
 	TokenType t = peek();
 	if(t == TokenType::Type && peekAhead() != TokenType::LParen) {
@@ -127,6 +134,9 @@ Node* Parser::parseStatement() {
 	}
 	else if(t == TokenType::FuncIdentifier) {
 		return parseFunction();
+	}
+	else if(peek() == TokenType::Return) {
+		return parseReturn();	
 	}
 	// else if(peek() == TokenType::RBrace) {
 		// return nullptr;
@@ -176,9 +186,9 @@ Node* Parser::parseFuncDeclaration() {
 		expect(TokenType::Return);
 		retType = expect(TokenType::Type);
 	}
-	else retType.name = "void";  
+	else retType.vartype = ValueType::none;  
 	Node* scope = parseScope();
-	return new FuncDeclNode(id.name, params, scope);
+	return new FuncDeclNode(id.name, params, scope, retType.vartype);
 }
 
 Node* Parser::parseProgram() {
