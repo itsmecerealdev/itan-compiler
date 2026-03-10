@@ -150,9 +150,7 @@ foo2(int64 L = 17) => int32 {
 ### Example test file syntax
 
 - ALL FILES MUST HAVE .it EXTENSIONS.
-  - Comments are not currently supported, so I'll put it here- the third line DOES evaluate, but it doesn't assign anywhere so it's orphaned basically.
-    - if you put print( ) around it, you can see it does evaluate.
-
+  - Comments are not currently supported
 ```it
 foo (int64 i = 5, int64 j = 7) => int64 {
     print(i);
