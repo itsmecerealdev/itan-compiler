@@ -351,9 +351,7 @@ void EvaluatorVisitor::visit(ScopeNode& node) {
 	}
 	// Visitor::visit(node);
 	for(const auto e : node.statements) {
-		if(runtime.size() > 1) std::cout << " here " << std::endl;
 		if(returned) {
-			std::cout << "returned " << stack.size() << std::endl;
 			stackStart++; //very awful solution- but.... deal with it.
 			break;
 		}
