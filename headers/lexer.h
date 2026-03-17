@@ -19,6 +19,13 @@ enum class TokenType : unsigned char {
 	RParen,
 	Comma,
 	Assignment,
+    Not,
+    Equal,
+    NotEqual,
+    LessThan,
+    GreaterThan,
+    LessEqual,
+    GreaterEqual,
 	Type,
 	StatementEnd,
 	Identifier,
@@ -37,7 +44,8 @@ enum class  ValueType : unsigned char{
 };
 enum class BuiltInFuncNames : unsigned char {
 	none,
-	print
+	print,
+    conditionalIf
 };
 
 class Token {
@@ -54,15 +62,16 @@ class Lexer {
 		string buffer;
 		unordered_map<string, ValueType> typeKeywords;
 		unordered_map<string, BuiltInFuncNames> funcKeywords; 
-		void eatWhiteSpace();
 
 		void generateKeywordMap();
 
 	public:
 		Lexer(const string &inbuf) : buffer(inbuf) { if(buffer.length() == 0) throw logic_error("0 length buffer."); }
 		
+        vector<Token> tokens;
 
-		vector<Token> tokenizeBuffer();
-		void printTokens(const vector<Token> &tokens);
+        void tokenizeBuffer();
+		void printTokens();
 };
 
+string printToken(const Token &t); //stupid c++ fix, otherwise parser cannot use this.

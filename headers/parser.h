@@ -8,7 +8,7 @@
 class Parser {
 	private:
 		int index{};
-		vector<Token> tokens;
+		vector<Token>& tokens;
 
 		Node* parseFactor();
 		Node* parseExponent();

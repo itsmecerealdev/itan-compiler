@@ -38,26 +38,22 @@ int main(int argc, char** argv) {
 	}
 
 	Lexer l{buffer};
-	tokens = l.tokenizeBuffer();
+	l.tokenizeBuffer();
+    l.printTokens();
 
-	for(const auto &c : tokens) {
-		cout << int(c.tokentype) << " ";
-	}
-	std::cout << std::endl;
-	// usleep(2);
-	Parser p{0, tokens};	
+	Parser p{0, l.tokens};	
 	Node* AST = p.parseProgram();
 
 
-	PrintVisitor pv;
-	DeclarationVisitor dv;
-	SemanticsVisitor sv;
-	TypeVisitor tv;
-	EvaluatorVisitor ev;
-	AST->accept(pv);
-	AST->accept(dv);
-	AST->accept(sv);
-	AST->accept(tv);
-	AST->accept(ev);
-	delete(AST);
+	// PrintVisitor pv;
+	// DeclarationVisitor dv;
+	// SemanticsVisitor sv;
+	// TypeVisitor tv;
+	// EvaluatorVisitor ev;
+	// AST->accept(pv);
+	// AST->accept(dv);
+	// AST->accept(sv);
+	// AST->accept(tv);
+	// AST->accept(ev);
+	// delete(AST);
 }

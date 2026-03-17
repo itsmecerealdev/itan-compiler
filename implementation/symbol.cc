@@ -15,6 +15,8 @@ bool issymbol(const char a) {
 		case '{':
 		case '}':
 		case '>':
+        case '<':
+        case '!':
 			return true;
 	}
 	return false;
@@ -37,6 +39,8 @@ bool issymbol(const string &a) {
 		case '{':
 		case '}':
 		case '>':
+        case '<':
+        case '!':
 			return true;
 	}
 	return false;

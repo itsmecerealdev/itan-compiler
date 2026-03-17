@@ -112,12 +112,21 @@ Node* Parser::parseDeclaration() {
 }
 
 Node* Parser::parseFunction() {
+  int errorInd = index;
 	Token t = expect(TokenType::FuncIdentifier);
 	expect(TokenType::LParen);
 	Node* exp = parseExpression();
 	expect(TokenType::RParen);
 	expect(TokenType::StatementEnd);
-	return new PrintNode(exp);
+  switch(t.func){
+    case BuiltInFuncNames::print:
+        return new PrintNode(exp);
+    case BuiltInFuncNames::conditionalIf:
+      // break;
+    default:
+          throw std::runtime_error("You shouldn't have ended up here. Please leave an issue on the github page with your example code and this error so I may debug! c:    -> "
+          + to_string(errorInd) + " <- This token index.");
+  }
 }
 
 Node* Parser::parseReturn() {
@@ -138,9 +147,6 @@ Node* Parser::parseStatement() {
 	else if(peek() == TokenType::Return) {
 		return parseReturn();	
 	}
-	// else if(peek() == TokenType::RBrace) {
-		// return nullptr;
-	// }
 	else if(t != TokenType::End) {
 		return parseExprStatement();
 	}
@@ -228,6 +234,8 @@ Token Parser::consume() {
 
 Token Parser::expect(TokenType t) {
 	TokenType temp = peek();
-	if(temp != t) throw logic_error("Token " + to_string(int(temp)) + " at index " + to_string(index) + " does not match expected qualifier: " + to_string(int(t)));
-	return consume();
+	if(temp != t) {
+        throw logic_error(printToken(tokens.at(index)) + " at index " + to_string(index) + " does not match expected qualifier: " + to_string(int(t)));
+    }
+    return consume();
 }
