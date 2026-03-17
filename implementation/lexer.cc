@@ -19,7 +19,7 @@ vector<Token> Lexer::tokenizeBuffer() {
 			bufferIndex++;
 			continue;
 		}
-		if(!isdigit(buffer.at(bufferIndex)) && !issymbol(buffer.at(bufferIndex)) && !ischar(buffer.at(bufferIndex))) {
+		if(!isdigit(buffer.at(bufferIndex)) && !issymbol(buffer.at(bufferIndex)) && !ischar(buffer.at(bufferIndex)) && buffer.at(bufferIndex) != '\\' ) {
 			throw logic_error("Invalid symbol: " + string(1, buffer.at(bufferIndex)) + "\na-z, A-Z, 0-9, +, -, *, /, (, ), or ; expected.\n");
 			exit(EXIT_FAILURE);
 		}
