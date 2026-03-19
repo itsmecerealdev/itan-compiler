@@ -26,6 +26,8 @@ enum class TokenType : unsigned char {
     GreaterThan,
     LessEqual,
     GreaterEqual,
+    And,
+    Or,
 	Type,
 	StatementEnd,
 	Identifier,
@@ -64,6 +66,7 @@ class Lexer {
 		unordered_map<string, BuiltInFuncNames> funcKeywords; 
 
 		void generateKeywordMap();
+        void resolveCombinedSymbols();
 
 	public:
 		Lexer(const string &inbuf) : buffer(inbuf) { if(buffer.length() == 0) throw logic_error("0 length buffer."); }
@@ -74,4 +77,5 @@ class Lexer {
 		void printTokens();
 };
 
-string printToken(const Token &t); //stupid c++ fix, otherwise parser cannot use this.
+string printToken(const Token &t);
+string printType(const ValueType vt);

@@ -4,11 +4,25 @@
 
 using namespace std;
 
+
+string printType(const ValueType vt) {
+    string ret;
+    switch(vt) {
+        case ValueType::int32:
+            ret += "int32";
+            break;
+        case ValueType::int64:
+            ret += "int64";
+            break;
+    }
+    return ret;
+}
+
 string printToken(const Token &t) {
     string ret;
     switch(t.tokentype) {
         case TokenType::Number:
-            ret += "Number: " + to_string(t.value) + " ";
+            ret += " Number: " + to_string(t.value);
             break;
         case TokenType::Plus:
             ret += "+";
@@ -58,14 +72,20 @@ string printToken(const Token &t) {
         case TokenType::GreaterEqual:
             ret += ">=";
             break;
+        case TokenType::And:
+            ret += "&";
+            break;
+        case TokenType::Or:
+            ret += "|";
+            break;
         case TokenType::Type:
-            ret += "Type: " + to_string(int(t.vartype)) + " ";
+            ret += "Type: " + printType(t.vartype);
             break;
         case TokenType::StatementEnd:
             ret += ";";
             break;
         case TokenType::Identifier:
-            ret += "Identifier: " + t.name + " ";
+            ret += "Identifier: " + t.name;
             break;
         case TokenType::FuncIdentifier:
             ret += "FuncIdentifier";
@@ -100,6 +120,46 @@ void Lexer::generateKeywordMap() {
 	typeKeywords["int64"] = ValueType::int64;
 	funcKeywords["print"] = BuiltInFuncNames::print;
     funcKeywords["if"] = BuiltInFuncNames::conditionalIf;
+    funcKeywords["else"];
+
+}
+
+void Lexer::resolveCombinedSymbols() {
+    for(size_t i = 0; i < tokens.size(); i++) {
+        if(tokens.at(i).tokentype == TokenType::End) {
+           tokens.erase(tokens.begin() + i + 1, tokens.end()); 
+        }
+        else if(tokens.at(i).tokentype == TokenType::Assignment) {
+            if(tokens.at(i + 1).tokentype == TokenType::Assignment) {
+                tokens.at(i + 1).tokentype = TokenType::Equal;
+                std::rotate(tokens.begin() + i, tokens.begin() + i + 1, tokens.end());
+            }
+            else if(tokens.at(i + 1).tokentype == TokenType::GreaterThan) {
+                tokens.at(i + 1).tokentype = TokenType::Return;
+                std::rotate(tokens.begin() + i, tokens.begin() + i + 1, tokens.end());
+            }
+        }
+        else if(tokens.at(i).tokentype == TokenType::LessThan) {
+            if(tokens.at(i + 1).tokentype == TokenType::Assignment) {
+                tokens.at(i + 1).tokentype = TokenType::LessEqual;
+                std::rotate(tokens.begin() + i, tokens.begin() + i + 1, tokens.end());
+            }
+        }
+        else if(tokens.at(i).tokentype == TokenType::GreaterThan) {
+            if(tokens.at(i + 1).tokentype == TokenType::Assignment) {
+                tokens.at(i + 1).tokentype = TokenType::GreaterEqual;
+                std::rotate(tokens.begin() + i, tokens.begin() + i + 1, tokens.end());
+            }
+        
+        }
+        else if(tokens.at(i).tokentype == TokenType::Not) {
+            if(tokens.at(i + 1).tokentype == TokenType::Assignment) {
+                tokens.at(i + 1).tokentype = TokenType::NotEqual;
+                std::rotate(tokens.begin() + i, tokens.begin() + i + 1, tokens.end());
+            }
+        }
+    }
+
 }
 
 void Lexer::tokenizeBuffer() {
@@ -165,6 +225,13 @@ void Lexer::tokenizeBuffer() {
                 case '!':
                     tokens.push_back(Token{TokenType::Not, ValueType::none, "", 0});
 					break;
+                case '&':
+                    tokens.push_back(Token{TokenType::And, ValueType::none, "", 0});
+					break;
+                case '|':
+                    tokens.push_back(Token{TokenType::Or, ValueType::none, "", 0});
+					break;
+
                     
 			}
 			bufferIndex++;
@@ -196,4 +263,5 @@ void Lexer::tokenizeBuffer() {
 		}
 	}
 	tokens.push_back(Token{TokenType::End, ValueType::none, "", 0});
+    resolveCombinedSymbols();
 }
