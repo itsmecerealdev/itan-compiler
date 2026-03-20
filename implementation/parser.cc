@@ -143,7 +143,7 @@ Node* Parser::parseConditionStruct() {
     ConditionStruct *node = new ConditionStruct();
     node->conditionalNodes.push_back(parseConditionBlock("if"));
     string name;
-    while(peek() == TokenType::FuncIdentifier) {
+    while(peek() == TokenType::FuncIdentifier && tokens.at(index).name != "if") {
         Token t  = expect(TokenType::FuncIdentifier);
         if(peek() == TokenType::FuncIdentifier) {
             name = "else if";
