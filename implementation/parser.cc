@@ -111,22 +111,65 @@ Node* Parser::parseDeclaration() {
 	return new DeclarationNode(vt, n, expression);
 }
 
+Node* Parser::parseCondition() {
+    cout << "Hi" << endl;
+    cout.flush();
+    Condition *root = new Condition();
+    root->left = parseExpression();
+    root->type = consume().tokentype; 
+    root->right = parseExpression();
+    while(peek() != TokenType::RParen) {
+        Condition *tmp = new Condition();
+        tmp->left = root;
+        root = tmp;
+        root->type = consume().tokentype; 
+        root->right = parseExpression();
+    }
+    return root;
+}
+
+Node* Parser::parseConditionBlock(const string &name) {
+    ConditionBlock *node = new ConditionBlock(name);
+    if(name != "else") {
+        node->condition = parseCondition();
+        expect(TokenType::RParen);
+    }
+    else node->condition = nullptr;
+    node->scope = parseScope();
+    return node;
+}
+
+Node* Parser::parseConditionStruct() {
+    ConditionStruct *node = new ConditionStruct();
+    node->conditionalNodes.push_back(parseConditionBlock("if"));
+    string name;
+    while(peek() == TokenType::FuncIdentifier) {
+        Token t  = expect(TokenType::FuncIdentifier);
+        if(peek() == TokenType::FuncIdentifier) {
+            name = "else if";
+            consume();
+        }
+        else name = "else";
+        node->conditionalNodes.push_back(parseConditionBlock(name));
+    }
+    return node;
+}
+
 Node* Parser::parseFunction() {
-  int errorInd = index;
+    int errorInd = index;
 	Token t = expect(TokenType::FuncIdentifier);
 	expect(TokenType::LParen);
-	Node* exp = parseExpression();
-	expect(TokenType::RParen);
-	expect(TokenType::StatementEnd);
-  switch(t.func){
-    case BuiltInFuncNames::print:
-        return new PrintNode(exp);
-    case BuiltInFuncNames::conditionalIf:
-      // break;
-    default:
-          throw std::runtime_error("You shouldn't have ended up here. Please leave an issue on the github page with your example code and this error so I may debug! c:    -> "
-          + to_string(errorInd) + " <- This token index.");
-  }
+    Node* exp; //cpp yelled at me for having this declared in the switch
+    switch(t.func){
+        case BuiltInFuncNames::print:
+            exp = parseExpression();
+            return new PrintNode(exp);
+        case BuiltInFuncNames::conditionalIf:
+            return parseConditionStruct();
+        default:
+            throw std::runtime_error("You shouldn't have ended up here. Please leave an issue on the github page with your example code and this error so I may debug! c:    -> "
+            + to_string(errorInd) + " <- This token index.");
+    }
 }
 
 Node* Parser::parseReturn() {

@@ -24,6 +24,11 @@ class Parser {
 
 		Node* parseStatement();
 		Node* parseScope();
+        
+        Node* parseCondition();
+        Node* parseConditionBlock(const string& nam);
+        Node* parseConditionStruct();
+
 		ParamNode* parseParam();
 		Node* parseFuncDeclaration();
 

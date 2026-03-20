@@ -78,6 +78,23 @@ void Visitor::visit(COCNode& node) {
 void Visitor::visit(PrintNode& node) {
 	node.expression->accept(*this);
 }
+
+void Visitor::visit(Condition& node) {
+    if(node.left) node.left->accept(*this); 
+    if(node.right) node.right->accept(*this);
+}
+
+void Visitor::visit(ConditionBlock& node) {
+    if(node.condition) node.condition->accept(*this);
+    if(node.scope) node.scope->accept(*this);
+}
+
+void Visitor::visit(ConditionStruct& node) {
+    for(const auto &n : node.conditionalNodes) {
+        if(n) n->accept(*this);
+    }
+}
+
 //PrintVisitorOverrides
 
 void PrintVisitor::tabHelper() {
@@ -183,6 +200,14 @@ void PrintVisitor::visit(PrintNode& node) {
 	tabHelper();
 	std::cout << "print:\n";
 	node.expression->accept(*this);
+}
+
+void PrintVisitor::visit(ConditionBlock& node) {
+    tabHelper();
+    std::cout << node.name << endl;
+    depth++;
+    Visitor::visit(node);
+    depth--;
 }
 
 //DeclarationVisitor overrides

@@ -208,3 +208,30 @@ class PrintNode : public Node {
 	}
 	~PrintNode() override { delete expression; }
 };
+
+class ConditionStruct : public Node {
+    public: 
+    vector<Node*> conditionalNodes;
+	void accept(Visitor &v) override;
+	~ConditionStruct() override { for(auto &t : conditionalNodes) delete t; }
+};
+
+class ConditionBlock : public Node {
+    public:
+    string name;
+    Node* condition{};
+    Node* scope{};
+    ConditionBlock(const string &inname) : name(inname) {}
+	void accept(Visitor &v) override;
+    ~ConditionBlock() override { delete condition; delete scope; }
+};
+
+class Condition : public Node {
+    public:
+    Node *left{}, *right{};
+    TokenType type;
+	void accept(Visitor &v) override;
+    ~Condition() override { delete left; delete right; }
+};
+
+
