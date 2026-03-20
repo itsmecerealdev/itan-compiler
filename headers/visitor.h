@@ -27,6 +27,7 @@ class Visitor {
 		virtual void visit(Condition& node);
 		virtual void visit(ConditionBlock& node);
 		virtual void visit(ConditionStruct& node);
+		virtual void visit(BoolNode& node);
 
 		virtual ~Visitor() = default;
 };
@@ -49,6 +50,7 @@ class PrintVisitor : public Visitor {
 		void visit(COCNode& node) override;
 		void visit(PrintNode& node) override;
 		void visit(ConditionBlock& node) override;
+		void visit(BoolNode& node) override;
 };
 
 class DeclarationVisitor : public Visitor {

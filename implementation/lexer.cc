@@ -5,14 +5,20 @@
 using namespace std;
 
 
-string printType(const ValueType vt) {
+string printType(const Token &t) {
     string ret;
-    switch(vt) {
+    switch(t.vartype) {
         case ValueType::int32:
             ret += "int32";
             break;
         case ValueType::int64:
             ret += "int64";
+            break;
+        case ValueType::boolean:
+            ret += "bool";
+            break;
+        case ValueType::LITERAL:
+            ret += t.name;
             break;
     }
     return ret;
@@ -79,7 +85,7 @@ string printToken(const Token &t) {
             ret += "|";
             break;
         case TokenType::Type:
-            ret += "Type: " + printType(t.vartype);
+            ret += "Type: " + printType(t);
             break;
         case TokenType::StatementEnd:
             ret += ";";
@@ -118,6 +124,9 @@ void Lexer::printTokens() {
 void Lexer::generateKeywordMap() {
 	typeKeywords["int32"] = ValueType::int32;
 	typeKeywords["int64"] = ValueType::int64;
+	typeKeywords["bool"] = ValueType::boolean;
+	literalKeywords["true"] = ValueType::boolean;
+	literalKeywords["false"] = ValueType::boolean;
 	funcKeywords["print"] = BuiltInFuncNames::print;
     funcKeywords["if"] = BuiltInFuncNames::conditionalIf;
     funcKeywords["else"];
@@ -249,6 +258,9 @@ void Lexer::tokenizeBuffer() {
 			else if(funcKeywords.contains(str)) {
 				tokens.push_back(Token{TokenType::FuncIdentifier, ValueType::none, str, 0, funcKeywords.at(str)});	
 			}
+            else if(literalKeywords.contains(str)) {
+				tokens.push_back(Token{TokenType::Type, ValueType::LITERAL, str, 0});	
+            }
 			else {
 				tokens.push_back(Token{TokenType::Identifier, ValueType::LITERAL, str, 0});	
 			}

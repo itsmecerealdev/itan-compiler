@@ -23,10 +23,11 @@ uint32_t typeRank(ValueType t) {
 	}
 }
 
-//There is NO default visit pattern for terminal nodes, so these are stubbed.
+//There is NO default visit pattern for leaf nodes, so these are stubbed.
 //If a visitor concrete class doesn't need anything from these node types, then they are simply skipped
 void Visitor::visit(NumberNode& node) { }
 void Visitor::visit(VariableNode& node) { }
+void Visitor::visit(BoolNode& node) { }
 
 //If concrete visitors do not need information from these node types, then it simply traverses the children.
 //These are overridden if the concrete visitor requires some functionality other than walking the tree
@@ -208,6 +209,11 @@ void PrintVisitor::visit(ConditionBlock& node) {
     depth++;
     Visitor::visit(node);
     depth--;
+}
+
+void PrintVisitor::visit(BoolNode& node) {
+    string val = node.boolean ? "true" : "false";
+    cout << val << endl;
 }
 
 //DeclarationVisitor overrides

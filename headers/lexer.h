@@ -42,7 +42,8 @@ enum class  ValueType : unsigned char{
 	none,
 	LITERAL,
 	int32,
-	int64
+	int64,
+    boolean
 };
 enum class BuiltInFuncNames : unsigned char {
 	none,
@@ -64,6 +65,7 @@ class Lexer {
 		string buffer;
 		unordered_map<string, ValueType> typeKeywords;
 		unordered_map<string, BuiltInFuncNames> funcKeywords; 
+        unordered_map<string, ValueType> literalKeywords;
 
 		void generateKeywordMap();
         void resolveCombinedSymbols();

@@ -16,3 +16,4 @@ void PrintNode::accept(Visitor &v) { v.visit(*this); }
 void Condition::accept(Visitor &v) { v.visit(*this); }
 void ConditionBlock::accept(Visitor &v) { v.visit(*this); }
 void ConditionStruct::accept(Visitor &v) { v.visit(*this); }
+void BoolNode::accept(Visitor &v) { v.visit(*this); }

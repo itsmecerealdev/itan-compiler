@@ -40,6 +40,7 @@ class Value {
 			uint64_t uint64;
 		} data;
 		std::string str;
+        bool booldata = false;
 	public:
 		ValueType getType() const { return type; }
 		void setType(ValueType t) { type = t; }
@@ -234,4 +235,9 @@ class Condition : public Node {
     ~Condition() override { delete left; delete right; }
 };
 
-
+class BoolNode : public Node {
+    public:
+    bool boolean;
+	void accept(Visitor &v) override;
+    BoolNode(bool inboolean) : boolean(inboolean) {}
+};

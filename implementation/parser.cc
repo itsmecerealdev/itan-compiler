@@ -22,9 +22,22 @@ Node* Parser::parseAssignment() {
 	Token t = expect(TokenType::Identifier);
 	string n = t.name;
 	expect(TokenType::Assignment);
-	Node* expression = parseExpression();
-	expect(TokenType::StatementEnd);
-	return new AssignmentNode(n, expression);
+    // i = if() {} is legal
+    // have to blindly trust that the identifier here is typed bool. It will get caught in the semantic passes
+    // before runtime interpretation
+    Node* expression;
+    if(peek() == TokenType::FuncIdentifier && tokens.at(index).name == "if") {
+        t = expect(TokenType::FuncIdentifier);
+        expect(TokenType::LParen);
+        expression = parseConditionBlock(t.name);
+        //expression = parseConditionStruct(); //uncomment this and comment line above to allow binding to entire struct
+        //instead of one block
+    }
+    else {
+        expression = parseExpression();
+	    expect(TokenType::StatementEnd);
+    }
+    return new AssignmentNode(n, expression);
 }
 
 Node* Parser::parseFactor() {
@@ -44,6 +57,10 @@ Node* Parser::parseFactor() {
 	else if(peek() == TokenType::Number) {
 		return new NumberNode(expect(TokenType::Number).value);
 	}
+    else if(peek() == TokenType::Type && (tokens.at(index).name == "true" || tokens.at(index).name == "false")) {
+        bool val = expect(TokenType::Type).name == "true" ? true : false;
+        return new BoolNode(val);
+    }
 	else return nullptr;
 }
 
@@ -106,13 +123,23 @@ Node* Parser::parseDeclaration() {
 	t = expect(TokenType::Identifier);
 	string n = t.name;
 	t = expect(TokenType::Assignment);
-	Node* expression = parseExpression();
-	expect(TokenType::StatementEnd);
-	return new DeclarationNode(vt, n, expression);
+    Node* expression;
+    // bool i = if() {} is legal.
+    if(vt == ValueType::boolean && peek() == TokenType::FuncIdentifier && tokens.at(index).name == "if") {
+        t = expect(TokenType::FuncIdentifier);
+        expect(TokenType::LParen);
+        expression = parseConditionBlock(t.name);
+        //expression = parseConditionStruct(); //uncomment this and comment line above to allow binding to entire struct
+        //instead of one block
+    }
+    else {
+        expression = parseExpression();
+	    expect(TokenType::StatementEnd);
+    }
+    return new DeclarationNode(vt, n, expression);
 }
 
 Node* Parser::parseCondition() {
-    cout << "Hi" << endl;
     cout.flush();
     Condition *root = new Condition();
     root->left = parseExpression();
