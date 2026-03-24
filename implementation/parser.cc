@@ -190,6 +190,7 @@ Node* Parser::parseFunction() {
     switch(t.func){
         case BuiltInFuncNames::print:
             exp = parseExpression();
+            expect(TokenType::RParen);
             return new PrintNode(exp);
         case BuiltInFuncNames::conditionalIf:
             return parseConditionStruct();
